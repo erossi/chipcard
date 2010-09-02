@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CHPC_PORT PORTD
-#define CHPC_PIN PIND
-#define CHPC_DDR DDRD
+#define CHPC_PORT PORTA
+#define CHPC_PIN PINA
+#define CHPC_DDR DDRA
 #define CHPC_PRESENT 0
 #define CHPC_RST 4
 #define CHPC_CK 6
@@ -32,7 +32,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
+#include "uart.h"
 
 /* In or OUT */
 void set_io(const uint8_t io)
@@ -68,11 +70,26 @@ void set_ck(const uint8_t ck)
 
 uint8_t read_byte(void)
 {
+	uint8_t i;
+	uint8_t byte=0;
+
+	for (i=0;i<8;i++) {
+		set_ck(1);
+
+		if (CHPC_PIN & _BV(CHPC_IO))
+			byte |= _BV(i);
+
+		ck_delay();
+		set_ck(0);
+		ck_delay();
+	}
+
+	return(byte);
 }
 
-void send_rst(void)
+void send_rst(uint8_t *atr)
 {
-	uint8_t i;
+	uint8_t i,j;
 
 	set_io(IN);
 	set_rst(1);
@@ -82,49 +99,68 @@ void send_rst(void)
 	set_rst(0);
 	ck_delay();
 
-	for (i=0; i<32; i++) {
+	for (i=0; i<4; i++) {
 		/* read bit in */
-		set_ck(1);
-		ck_delay();
-		set_ck(0);
-		ck_delay();
+		*(atr+i) = read_byte();
 	}
 
 }
 
 void init(void)
 {
-		/*
-		   Inital PORT setup:
-		   Card present 1 Pulled UP by micro
-		   Reset 0
-		   Clock 0
-		   IO 1 Pulled UP when Reading
-		   */
-		
-		CHPC_PORT = (1 << CHPC_PRESENT) | (1 << CHPC_IO);
+	/*
+	   Inital PORT setup:
+	   Card present 1 Pulled UP by micro
+	   Reset 0
+	   Clock 0
+	   IO 1 Pulled UP when Reading
+	 */
 
-		/*
-		   Initial DDR setup:
-		   Card Present - IN
-		   Reset - OUT
-		   Clock - OUT
-		   IO - BiDirectional begin IN
-		   */
+	CHPC_PORT = (1 << CHPC_PRESENT) | (1 << CHPC_IO);
 
-		CHPC_DDR = (1 << CHPC_RST) | (1 << CHPC_CK);
+	/*
+	   Initial DDR setup:
+	   Card Present - IN
+	   Reset - OUT
+	   Clock - OUT
+	   IO - BiDirectional begin IN
+	 */
+
+	CHPC_DDR = (1 << CHPC_RST) | (1 << CHPC_CK);
+}
+
+void print_atr(uint8_t *atr, char *line, char *string)
+{
+	uint8_t i;
+
+	for (i=0; i<4; i++) {
+		strcpy_P (line, PSTR("ATR Byte: "));
+		string = utoa(*(atr+i), string, 10);
+		strcat (line, string);
+		uart_printstr (line);
+		uart_putchar ('\n');
+	}
 }
 
 int main(void)
 {
-	*char atr;
+	uint8_t *atr;
+	char *line;
+	char *string;
+	int i;
 
 	init();
+	uart_init();
 
 	DDRC = 1; /* PC0 OUT */
 	PORTC = 1; /* PC0 led off */
 
 	atr = malloc(4);
+	line = malloc(80);
+	string = malloc(20);
+
+	strcpy_P (line, PSTR("Chipcard SLE4447 test.\n"));
+	uart_printstr (line);
 
 	for (;;) {
 		loop_until_bit_is_set(CHPC_PIN, CHPC_PRESENT);
@@ -132,6 +168,9 @@ int main(void)
 		_delay_ms(1000);
 
 		send_rst(atr);
+		print_atr(atr, line, string);
+		strcpy_P (line, PSTR("----\n"));
+		uart_printstr (line);
 
 		loop_until_bit_is_clear(CHPC_PIN, CHPC_PRESENT);
 		PORTC=1;
@@ -139,6 +178,8 @@ int main(void)
 	}
 
 	free(atr);
+	free(line);
+	free(string);
 }
 
 /* vim: set nu cindent ts=4 sw=4: */
