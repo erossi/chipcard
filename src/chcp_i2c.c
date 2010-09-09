@@ -53,30 +53,6 @@ void set_io(const uint8_t io)
 	}
 }
 
-/* 1 or 0 */
-/* substituted by macro
-void set_rst(const uint8_t rst)
-{
-	if (rst)
-		CHPC_PORT |= (1<<CHPC_RST);
-	else
-		CHPC_PORT &= ~(1<<CHPC_RST);
-
-}
-*/
-
-/* 1 or 0 */
-/* substituted by macro
-void set_ck(const uint8_t ck)
-{
-	if (ck)
-		CHPC_PORT |= (1<<CHPC_CK);
-	else
-		CHPC_PORT &= ~(1<<CHPC_CK);
-
-}
-*/
-
 /* read io bit on the 1 phase of the ck line */
 uint8_t read_byte(void)
 {

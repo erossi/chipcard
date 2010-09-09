@@ -79,3 +79,15 @@ void chcp_dump_prt_memory(uint8_t *mm) {
 	ck_pulse(); /* leave the card to high imp. I/O line */
 }
 
+void chcp_dump_secmem(uint8_t *mm) {
+	uint8_t i;
+
+	send_cmd(CHCP_CMD_DUMP_SECMEM, 0, 0);
+	set_io(IN);
+
+	for (i=0; i<4; i++)
+		*(mm+i) = read_byte();
+
+	ck_pulse(); /* leave the card to high imp. I/O line */
+}
+

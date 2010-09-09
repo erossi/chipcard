@@ -61,6 +61,12 @@ void print_prt_memory(uint8_t *atr, char *line, char *string)
 	print_mm(atr, line, string, 32);
 }
 
+void print_secmem(uint8_t *atr, char *line, char *string)
+{
+	strcpy_P (line, PSTR("-> Security Memory Bytes ----\n"));
+	print_mm(atr, line, string, 4);
+}
+
 int main(void)
 {
 	uint8_t *atr;
@@ -96,6 +102,8 @@ int main(void)
 		print_memory(main_memory, line, string);
 		chcp_dump_prt_memory(main_memory);
 		print_prt_memory(main_memory, line, string);
+		chcp_dump_secmem(main_memory);
+		print_secmem(main_memory, line, string);
 
 		while (chcp_present())
 			_delay_ms(1000);
