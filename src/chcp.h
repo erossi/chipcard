@@ -15,7 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define CHCP_CMD_DUMP_MEMORY 0x30
+
 void chcp_init_io(void);
 void chcp_reset(uint8_t *atr);
 uint8_t chcp_present(void);
+void chcp_dump_memory(uint8_t *mm);
 

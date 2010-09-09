@@ -34,6 +34,7 @@
 #define set_rst_1 CHPC_PORT |= (1<<CHPC_RST)
 #define set_rst_0 CHPC_PORT &= ~(1<<CHPC_RST)
 
+void ck_pulse(void);
 void set_io(const uint8_t io);
 /*
    void set_rst(const uint8_t rst);
@@ -42,4 +43,5 @@ void set_io(const uint8_t io);
 uint8_t read_byte(void);
 void send_byte(uint8_t byte);
 void send_rst(uint8_t *atr);
+void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data);
 

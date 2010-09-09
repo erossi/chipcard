@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include "chcp_i2c.h"
+#include "chcp.h"
 
 void chcp_init_io(void)
 {
@@ -50,5 +51,19 @@ void chcp_reset(uint8_t *atr) {
 /* return 0 = card not preset or some other integer */
 uint8_t chcp_present(void) {
 	return(CHPC_PIN & _BV(CHPC_PRESENT));
+}
+
+void chcp_dump_memory(uint8_t *mm) {
+	uint8_t i = 0;
+
+	send_cmd(CHCP_CMD_DUMP_MEMORY, 0, 0);
+	set_io(IN);
+
+	do {
+		*(mm+i) = read_byte();
+		i++;
+	} while (i);
+
+	ck_pulse(); /* leave the card to high imp. I/O line */
 }
 

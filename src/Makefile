@@ -7,7 +7,7 @@ CFLAGS = $(INC) -Wall -Wstrict-prototypes -pedantic -mmcu=$(MCU) -O$(OPTLEV) -D 
 LFLAGS = -l$(LIBS)
 CC = avr-gcc
 
-PRGNAME = test_atr
+PRGNAME = chipcard
 OBJCOPY = avr-objcopy -j .text -j .data -O ihex
 OBJDUMP = avr-objdump
 SIZE = avr-size
@@ -22,6 +22,14 @@ objects = uart.o chcp_i2c.o chcp.o
 
 all: $(objects)
 	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c $(objects) $(LFLAGS)
+	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
+
+test_atr: $(objects)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf test_atr.c $(objects) $(LFLAGS)
+	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
+
+test_dump: $(objects)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf test_dump.c $(objects) $(LFLAGS)
 	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
 
 program:

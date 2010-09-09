@@ -21,7 +21,17 @@
 #include <util/delay.h>
 #include "chcp_i2c.h"
 
-/* 0 in out mode send 0 to I/O line
+/* a single clock pulse */
+void ck_pulse(void)
+{
+	set_ck_1;
+	ck_delay();
+	set_ck_0;
+	ck_delay();
+}
+
+/*
+   0 in out mode send 0 to I/O line
    1 in out mode send 1 to I/O line
    IN switch I/O to input
    OUT switch I/O to output
@@ -121,5 +131,14 @@ void send_rst(uint8_t *atr)
 		/* read bit in */
 		*(atr+i) = read_byte();
 	}
+}
+
+void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
+{
+	set_io(OUT);
+	ck_delay();
+	send_byte(control);
+	send_byte(address);
+	send_byte(data);
 }
 
