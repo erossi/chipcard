@@ -7,14 +7,14 @@ CFLAGS = $(INC) -Wall -Wstrict-prototypes -pedantic -mmcu=$(MCU) -O$(OPTLEV) -D 
 LFLAGS = -l$(LIBS)
 CC = avr-gcc
 
-PRGNAME = test_chpc
+PRGNAME = test_atr
 OBJCOPY = avr-objcopy -j .text -j .data -O ihex
 OBJDUMP = avr-objdump
 SIZE = avr-size
 DUDE = avrdude -c stk500v1 -p $(MCU) -P /dev/ttyUSB0 -e -U flash:w:$(PRGNAME).hex
 REMOVE = rm -f
 
-objects = uart.o
+objects = uart.o chcp_i2c.o chcp.o
 
 .PHONY: clean indent
 .SILENT: help
