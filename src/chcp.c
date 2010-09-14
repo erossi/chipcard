@@ -57,7 +57,6 @@ void chcp_dump_memory(uint8_t *mm) {
 	uint8_t i = 0;
 
 	send_cmd(CHCP_CMD_DUMP_MEMORY, 0, 0);
-	set_io(IN);
 
 	do {
 		*(mm+i) = read_byte();

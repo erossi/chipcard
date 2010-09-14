@@ -40,17 +40,43 @@ void ck_pulse(void)
 void set_io(const uint8_t io)
 {
 	switch (io) {
-		case 0: CHPC_PORT &= ~_BV(CHPC_IO);
+		case 0:
+			CHPC_PORT &= ~_BV(CHPC_IO);
 			break;
-		case 1: CHPC_PORT |= _BV(CHPC_IO);
+		case 1:
+			CHPC_PORT |= _BV(CHPC_IO);
 			break;
-		case OUT: CHPC_PORT &= ~(1<<CHPC_IO);
-			  CHPC_DDR |= (1<<CHPC_IO);
-			  break;
+		case OUT:
+			CHPC_PORT &= ~_BV(CHPC_IO);
+			CHPC_DDR |= _BV(CHPC_IO);
+			break;
 		default:
-			  CHPC_PORT |= (1<<CHPC_IO);
-			  CHPC_DDR &= ~(1<<CHPC_IO);
+			CHPC_PORT |= _BV(CHPC_IO);
+			CHPC_DDR &= ~_BV(CHPC_IO);
 	}
+}
+
+/* This sets IO to OUT */
+void send_start(void)
+{
+	set_ck_0; /* redundancy */
+	set_io(OUT);
+	set_io(1);
+	set_ck_1;
+	ck_delay();
+	set_io(0);
+	set_ck_0;
+	ck_delay();
+}
+
+/* This sets IO from OUT to IN */
+void send_stop(void)
+{
+	set_ck_1;
+	set_io(IN); /* with pull up IO goes 1 */
+	ck_delay();
+	set_ck_0;
+	ck_delay();
 }
 
 /* read io bit on the 1 phase of the ck line */
@@ -78,7 +104,7 @@ void send_byte(uint8_t byte)
 {
 	uint8_t i;
 
-	for (i=0;i<8;i++) {
+	for (i=0; i<8; i++) {
 		if (byte & _BV(i))
 			set_io(1);
 		else
@@ -109,12 +135,13 @@ void send_rst(uint8_t *atr)
 	}
 }
 
+/* After a command IO in IN */
 void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
 {
-	set_io(OUT);
-	ck_delay();
+	send_start();
 	send_byte(control);
 	send_byte(address);
 	send_byte(data);
+	send_stop();
 }
 
