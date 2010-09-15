@@ -24,14 +24,6 @@ all: $(objects)
 	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c $(objects) $(LFLAGS)
 	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
 
-test_atr: $(objects)
-	$(CC) $(CFLAGS) -o $(PRGNAME).elf test_atr.c $(objects) $(LFLAGS)
-	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
-
-test_dump: $(objects)
-	$(CC) $(CFLAGS) -o $(PRGNAME).elf test_dump.c $(objects) $(LFLAGS)
-	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
-
 program:
 	$(DUDE)
 

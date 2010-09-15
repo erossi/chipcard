@@ -21,59 +21,54 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+#include "chcp.h"
 #include "uart.h"
-
-void print_atr(uint8_t *atr, char *line, char *string)
-{
-	uint8_t i;
-
-	for (i=0; i<4; i++) {
-		strcpy_P (line, PSTR("ATR Byte: "));
-		string = utoa(*(atr+i), string, 10);
-		strcat (line, string);
-		uart_printstr (line);
-		uart_putchar ('\n');
-	}
-}
+#include "print_uart.h"
 
 int main(void)
 {
-	uint8_t *atr;
+	struct chcp_t *chcp;
 	char *line;
 	char *string;
-	int i;
 
-	init();
+	chcp = chcp_init();
 	uart_init();
 
 	DDRC = 1; /* PC0 OUT */
 	PORTC = 1; /* PC0 led off */
 
-	atr = malloc(4);
 	line = malloc(80);
 	string = malloc(20);
 
-	strcpy_P (line, PSTR("Chipcard SLE4447 test.\n"));
+	strcpy_P (line, PSTR("Chipcard SLE4447 DUMP Memory test.\n"));
 	uart_printstr (line);
 
 	for (;;) {
-		loop_until_bit_is_set(CHPC_PIN, CHPC_PRESENT);
+		while (!chcp_present(chcp))
+			_delay_ms(1000);
+
+		uart_putchar ('\n');
 		PORTC=0;
 		_delay_ms(1000);
 
-		send_rst(atr);
-		print_atr(atr, line, string);
-		strcpy_P (line, PSTR("----\n"));
-		uart_printstr (line);
+		chcp_reset(chcp->atr);
+		print_atr(chcp->atr, line, string);
+		chcp_dump_memory(chcp->main_memory);
+		print_memory(chcp->main_memory, line, string);
+		chcp_dump_prt_memory(chcp->protected_memory);
+		print_prt_memory(chcp->protected_memory, line, string);
+		chcp_dump_secmem(chcp->security_memory);
+		print_secmem(chcp->security_memory, line, string);
 
-		loop_until_bit_is_clear(CHPC_PIN, CHPC_PRESENT);
+		while (chcp_present(chcp))
+			_delay_ms(1000);
+
 		PORTC=1;
 		_delay_ms(1000);
 	}
 
-	free(atr);
+	chcp_free(chcp);
 	free(line);
 	free(string);
 }
 
-/* vim: set nu cindent ts=4 sw=4: */
