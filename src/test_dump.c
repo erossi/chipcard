@@ -31,17 +31,12 @@ int main(void)
 	char *line;
 	char *string;
 
-	chcp_init_io();
+	chcp = chcp_init();
 	uart_init();
 
 	DDRC = 1; /* PC0 OUT */
 	PORTC = 1; /* PC0 led off */
 
-	chcp = malloc(sizeof(struct chcp_t));
-	chcp->atr = malloc(4);
-	chcp->main_memory = malloc(256);
-	chcp->protected_memory = malloc(32);
-	chcp->security_memory = malloc(4);
 	line = malloc(80);
 	string = malloc(20);
 
@@ -72,11 +67,7 @@ int main(void)
 		_delay_ms(1000);
 	}
 
-	free(chcp->atr);
-	free(chcp->main_memory);
-	free(chcp->protected_memory);
-	free(chcp->security_memory);
-	free(chcp);
+	chcp_free(chcp);
 	free(line);
 	free(string);
 }

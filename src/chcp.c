@@ -21,8 +21,10 @@
 #include "chcp_i2c.h"
 #include "chcp.h"
 
-void chcp_init_io(void)
+struct chcp_t* chcp_init(void)
 {
+	struct chcp_t *chcp;
+
 	/*
 	   Inital PORT setup:
 	   Card present 1 Pulled UP by micro
@@ -31,7 +33,7 @@ void chcp_init_io(void)
 	   IO 1 Pulled UP when Reading
 	 */
 
-	CHPC_PORT = (1 << CHPC_PRESENT) | (1 << CHPC_IO);
+	CHPC_PORT = _BV(CHPC_PRESENT) | _BV(CHPC_IO);
 
 	/*
 	   Initial DDR setup:
@@ -41,7 +43,23 @@ void chcp_init_io(void)
 	   IO - BiDirectional begin IN
 	 */
 
-	CHPC_DDR = (1 << CHPC_RST) | (1 << CHPC_CK);
+	CHPC_DDR = _BV(CHPC_RST) | _BV(CHPC_CK);
+
+	chcp = malloc(sizeof(struct chcp_t));
+	chcp->atr = malloc(4);
+	chcp->main_memory = malloc(256);
+	chcp->protected_memory = malloc(32);
+	chcp->security_memory = malloc(4);
+	return(chcp);
+}
+
+void chcp_free(struct chcp_t *chcp)
+{
+	free(chcp->security_memory);
+	free(chcp->protected_memory);
+	free(chcp->main_memory);
+	free(chcp->atr);
+	free(chcp);
 }
 
 void chcp_reset(uint8_t *atr) {
@@ -56,18 +74,16 @@ uint8_t chcp_present(struct chcp_t *chcp) {
 	else
 		chcp->card_present=0;
 
-	return (chcp->card_present);
+	return(chcp->card_present);
 }
 
 void chcp_dump_memory(uint8_t *mm) {
-	uint8_t i = 0;
+	int i;
 
 	send_cmd(CHCP_CMD_DUMP_MEMORY, 0, 0);
 
-	do {
+	for (i=0; i<256; i++)
 		*(mm+i) = read_byte();
-		i++;
-	} while (i);
 
 	ck_pulse(); /* leave the card to high imp. I/O line */
 }
@@ -76,7 +92,6 @@ void chcp_dump_prt_memory(uint8_t *mm) {
 	uint8_t i;
 
 	send_cmd(CHCP_CMD_DUMP_PRT_MEMORY, 0, 0);
-	set_io(IN);
 
 	for (i=0; i<32; i++)
 		*(mm+i) = read_byte();
@@ -88,7 +103,6 @@ void chcp_dump_secmem(uint8_t *mm) {
 	uint8_t i;
 
 	send_cmd(CHCP_CMD_DUMP_SECMEM, 0, 0);
-	set_io(IN);
 
 	for (i=0; i<4; i++)
 		*(mm+i) = read_byte();

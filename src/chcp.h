@@ -31,7 +31,8 @@ struct chcp_t {
 	uint8_t card_present;
 };
 
-void chcp_init_io(void);
+struct chcp_t* chcp_init(void);
+void chcp_free(struct chcp_t *chcp);
 void chcp_reset(uint8_t *atr);
 uint8_t chcp_present(struct chcp_t *chcp);
 void chcp_dump_memory(uint8_t *mm);
