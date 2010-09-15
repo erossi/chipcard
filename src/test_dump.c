@@ -23,49 +23,7 @@
 #include <util/delay.h>
 #include "chcp.h"
 #include "uart.h"
-
-void print_mm(uint8_t *mm, char *line, char *string, const int max)
-{
-	int i;
-
-	uart_putchar ('\n');
-
-	for (i=0; i<max; i++) {
-		strcpy_P (line, PSTR("Byte: "));
-		string = utoa(i, string, 10);
-		strcat (line, string);
-		strcpy_P (string, PSTR(" = "));
-		strcat (line, string);
-		string = utoa(*(mm+i), string, 10);
-		strcat (line, string);
-		uart_printstr (line);
-		uart_putchar ('\n');
-	}
-}
-
-void print_atr(uint8_t *atr, char *line, char *string)
-{
-	strcpy_P (line, PSTR("-> ATR Bytes ----\n"));
-	print_mm(atr, line, string, 4);
-}
-
-void print_memory(uint8_t *atr, char *line, char *string)
-{
-	strcpy_P (line, PSTR("-> Main Memory Bytes ----\n"));
-	print_mm(atr, line, string, 256);
-}
-
-void print_prt_memory(uint8_t *atr, char *line, char *string)
-{
-	strcpy_P (line, PSTR("-> Protected Memory Bytes ----\n"));
-	print_mm(atr, line, string, 32);
-}
-
-void print_secmem(uint8_t *atr, char *line, char *string)
-{
-	strcpy_P (line, PSTR("-> Security Memory Bytes ----\n"));
-	print_mm(atr, line, string, 4);
-}
+#include "print_uart.h"
 
 int main(void)
 {
