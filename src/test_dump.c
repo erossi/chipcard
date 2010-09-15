@@ -27,8 +27,7 @@
 
 int main(void)
 {
-	uint8_t *atr;
-	uint8_t *main_memory;
+	struct chcp_t *chcp;
 	char *line;
 	char *string;
 
@@ -38,8 +37,11 @@ int main(void)
 	DDRC = 1; /* PC0 OUT */
 	PORTC = 1; /* PC0 led off */
 
-	atr = malloc(4);
-	main_memory = malloc(256);
+	chcp = malloc(sizeof(struct chcp_t));
+	chcp->atr = malloc(4);
+	chcp->main_memory = malloc(256);
+	chcp->protected_memory = malloc(32);
+	chcp->security_memory = malloc(4);
 	line = malloc(80);
 	string = malloc(20);
 
@@ -47,31 +49,34 @@ int main(void)
 	uart_printstr (line);
 
 	for (;;) {
-		while (!chcp_present())
+		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
 		uart_putchar ('\n');
 		PORTC=0;
 		_delay_ms(1000);
 
-		chcp_reset(atr);
-		print_atr(atr, line, string);
-		chcp_dump_memory(main_memory);
-		print_memory(main_memory, line, string);
-		chcp_dump_prt_memory(main_memory);
-		print_prt_memory(main_memory, line, string);
-		chcp_dump_secmem(main_memory);
-		print_secmem(main_memory, line, string);
+		chcp_reset(chcp->atr);
+		print_atr(chcp->atr, line, string);
+		chcp_dump_memory(chcp->main_memory);
+		print_memory(chcp->main_memory, line, string);
+		chcp_dump_prt_memory(chcp->protected_memory);
+		print_prt_memory(chcp->protected_memory, line, string);
+		chcp_dump_secmem(chcp->security_memory);
+		print_secmem(chcp->security_memory, line, string);
 
-		while (chcp_present())
+		while (chcp_present(chcp))
 			_delay_ms(1000);
 
 		PORTC=1;
 		_delay_ms(1000);
 	}
 
-	free(atr);
-	free(main_memory);
+	free(chcp->atr);
+	free(chcp->main_memory);
+	free(chcp->protected_memory);
+	free(chcp->security_memory);
+	free(chcp);
 	free(line);
 	free(string);
 }

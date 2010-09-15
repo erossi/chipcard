@@ -15,14 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef CHCP_H_
+#define CHCP_H_
+
 #define CHCP_CMD_DUMP_MEMORY 0x30
 #define CHCP_CMD_DUMP_SECMEM 0x31
 #define CHCP_CMD_DUMP_PRT_MEMORY 0x34
 
+/* Keep in mind AtMega chips have only 1 KB RAM */
+struct chcp_t {
+	uint8_t *atr; /* 4 bytes */
+	uint8_t *main_memory; /* 256 bytes */
+	uint8_t *protected_memory; /* 32 bytes */
+	uint8_t *security_memory; /* 4 Bytes */
+	uint8_t card_present;
+};
+
 void chcp_init_io(void);
 void chcp_reset(uint8_t *atr);
-uint8_t chcp_present(void);
+uint8_t chcp_present(struct chcp_t *chcp);
 void chcp_dump_memory(uint8_t *mm);
 void chcp_dump_prt_memory(uint8_t *mm);
 void chcp_dump_secmem(uint8_t *mm);
+
+#endif
 
