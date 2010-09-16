@@ -57,7 +57,7 @@ void print_memory(uint8_t *atr, char *line, char *string)
 void print_prt_memory(uint8_t *atr, char *line, char *string)
 {
 	strcpy_P (line, PSTR("-> Protected Memory Bytes ----\n"));
-	print_mm(atr, line, string, 32);
+	print_mm(atr, line, string, 4);
 }
 
 void print_secmem(uint8_t *atr, char *line, char *string)

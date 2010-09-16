@@ -21,6 +21,12 @@
 #define CHCP_CMD_DUMP_MEMORY 0x30
 #define CHCP_CMD_DUMP_SECMEM 0x31
 #define CHCP_CMD_DUMP_PRT_MEMORY 0x34
+#define CHCP_CMD_COMPARE_VERIFICATION_DATA 0x33
+#define CHCP_CMD_UPDATE_SECMEM 0x39
+
+#define CHCP_PIN1 0xFF
+#define CHCP_PIN2 0xFF
+#define CHCP_PIN3 0xFF
 
 /* Keep in mind AtMega chips have only 1 KB RAM */
 struct chcp_t {
@@ -29,6 +35,12 @@ struct chcp_t {
 	uint8_t *protected_memory; /* 32 bytes */
 	uint8_t *security_memory; /* 4 Bytes */
 	uint8_t card_present;
+	uint8_t auth;
+	int ck_proc; /* numbers of clock counts during processing */
+	int ck_proc1;
+	int ck_proc2;
+	int ck_proc3;
+	int ck_proc4;
 };
 
 struct chcp_t* chcp_init(void);
@@ -38,6 +50,7 @@ uint8_t chcp_present(struct chcp_t *chcp);
 void chcp_dump_memory(uint8_t *mm);
 void chcp_dump_prt_memory(uint8_t *mm);
 void chcp_dump_secmem(uint8_t *mm);
+void chcp_auth(struct chcp_t *chcp);
 
 #endif
 

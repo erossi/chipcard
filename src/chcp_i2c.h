@@ -24,11 +24,19 @@
 #define CHPC_IO 7
 #define OUT 2
 #define IN 3
-/* 10Khz = 100usec */
-#define CHPC_USEC 100
 
 /* Macro */
-#define ck_delay() _delay_us(100)
+/*
+   10Khz = 100usec
+   20Khz = 50usec, half wave = 25 usec
+   Remeber delay is only HALF of the freq.
+   20Khz total
+ */
+#define ck_delay() _delay_us(25)
+/* delay between fronts of ck and/or rst and/or IO */
+#define ck_delay_front() _delay_us(4)
+/* delay reset = 1 */
+#define ck_delay_reset() _delay_us(50)
 #define set_ck_1 CHPC_PORT |= (1<<CHPC_CK)
 #define set_ck_0 CHPC_PORT &= ~(1<<CHPC_CK)
 #define set_rst_1 CHPC_PORT |= (1<<CHPC_RST)
@@ -44,4 +52,5 @@ uint8_t read_byte(void);
 void send_byte(uint8_t byte);
 void send_rst(uint8_t *atr);
 void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data);
+int processing(void);
 

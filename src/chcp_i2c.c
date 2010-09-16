@@ -47,7 +47,6 @@ void set_io(const uint8_t io)
 			CHPC_PORT |= _BV(CHPC_IO);
 			break;
 		case OUT:
-			CHPC_PORT &= ~_BV(CHPC_IO);
 			CHPC_DDR |= _BV(CHPC_IO);
 			break;
 		default:
@@ -65,6 +64,7 @@ void send_start(void)
 	set_ck_1;
 	ck_delay();
 	set_io(0);
+	ck_delay_front();
 	set_ck_0;
 	ck_delay();
 }
@@ -72,7 +72,10 @@ void send_start(void)
 /* This sets IO from OUT to IN */
 void send_stop(void)
 {
+	set_io(0);
+	ck_delay_front();
 	set_ck_1;
+	ck_delay_front();
 	set_io(IN); /* with pull up IO goes 1 */
 	ck_delay();
 	set_ck_0;
@@ -110,6 +113,7 @@ void send_byte(uint8_t byte)
 		else
 			set_io(0);
 
+		ck_delay_front();
 		set_ck_1;
 		ck_delay();
 		set_ck_0;
@@ -123,9 +127,11 @@ void send_rst(uint8_t *atr)
 
 	set_io(IN);
 	set_rst_1;
+	ck_delay_front();
 	set_ck_1;
-	ck_delay();
+	ck_delay_reset();
 	set_ck_0;
+	ck_delay_front();
 	set_rst_0;
 	ck_delay();
 
@@ -143,5 +149,18 @@ void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
 	send_byte(address);
 	send_byte(data);
 	send_stop();
+}
+
+int processing(void)
+{
+	int i = 1;
+
+	while (!(CHPC_PIN & _BV(CHPC_IO))) {
+		ck_pulse();
+		i++;
+	}
+
+	ck_pulse();
+	return (i);
 }
 
