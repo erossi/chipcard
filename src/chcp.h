@@ -18,12 +18,15 @@
 #ifndef CHCP_H_
 #define CHCP_H_
 
+#define CHCP_VERSION 0.1
 #define CHCP_CMD_DUMP_MEMORY 0x30
 #define CHCP_CMD_DUMP_SECMEM 0x31
 #define CHCP_CMD_DUMP_PRT_MEMORY 0x34
 #define CHCP_CMD_COMPARE_VERIFICATION_DATA 0x33
 #define CHCP_CMD_UPDATE_SECMEM 0x39
+#define CHCP_CMD_UPDATE_MEMORY 0x38
 
+/* The top secret pin */
 #define CHCP_PIN1 0xFF
 #define CHCP_PIN2 0xFF
 #define CHCP_PIN3 0xFF
@@ -36,7 +39,7 @@ struct chcp_t {
 	uint8_t *security_memory; /* 4 Bytes */
 	uint8_t *ck_proc; /* processing clock counts */
 	uint8_t card_present;
-	uint8_t auth;
+	uint8_t auth; /* 1 = auth ok, I can write */
 };
 
 struct chcp_t* chcp_init(void);
@@ -46,7 +49,8 @@ uint8_t chcp_present(struct chcp_t *chcp);
 void chcp_dump_memory(uint8_t *mm);
 void chcp_dump_prt_memory(uint8_t *mm);
 void chcp_dump_secmem(uint8_t *mm);
-void chcp_auth(struct chcp_t *chcp);
+void chcp_auth(struct chcp_t *chcp, const uint8_t pin1, const uint8_t pin2, const uint8_t pin3);
+void chcp_write_memory(struct chcp_t *chcp, const uint8_t addr, const uint8_t len);
 
 #endif
 

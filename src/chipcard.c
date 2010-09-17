@@ -25,28 +25,45 @@
 #include "uart.h"
 #include "print_uart.h"
 
-int main(void)
+uint8_t credit_check(struct chcp_t *chcp)
 {
-	struct chcp_t *chcp;
-	char *line;
-	char *string;
+	int result;
+	uint8_t bucks;
 
-	chcp = chcp_init();
-	uart_init();
+	result = memcmp(chcp->main_memory + 32, "CHARLIE", 7);
+	bucks = *(chcp->main_memory + 40);
 
-	DDRC = 3; /* PC0 - RED and PC1 - GREEN OUT */
-	PORTC = 3; /* leds off */
+	if (bucks && !result)
+		return(1);
+	else
+		return(0);
+}
 
-	line = malloc(80);
-	string = malloc(20);
+uint8_t credit_suck(struct chcp_t *chcp)
+{
+	uint8_t bucks;
 
-	strcpy_P (line, PSTR("Chipcard SLE4442 Write access test.\n"));
+	bucks = *(chcp->main_memory + 40);
+
+	/* clear bucks in the card */
+	if (bucks) {
+		*(chcp->main_memory + 40) = 0;
+		chcp_write_memory(chcp, 40, 1);
+	}
+
+	return(bucks);
+}
+
+void mastermind(struct chcp_t *chcp, char *line, char *string)
+{
+	strcpy_P (line, PSTR("Master mode\n"));
 	uart_printstr (line);
 
 	for (;;) {
 		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
+		chcp->auth = 0; /* Default to non-auth */
 		uart_putchar ('\n');
 		PORTC = 2; /* RED on */
 		_delay_ms(500);
@@ -62,23 +79,111 @@ int main(void)
 			print_secmem(chcp->security_memory, line, string);
 			print_memory(chcp->main_memory, line, string);
 
-			strcpy_P (string, PSTR("Press 7 to auth \n"));
-			strcat (line, string);
-			uart_printstr (line);
+			if (credit_check(chcp)) {
+				strcpy_P (line, PSTR("\n Valid card with credit\n"));
+				uart_printstr (line);
+				strcpy_P (line, PSTR("\n Insert a blank card please! \n"));
+				uart_printstr (line);
 
-			loop_until_bit_is_clear(PINC, 7);
+			} else {
+				strcpy_P (line, PSTR("\n New card! Press 7 to auth \n"));
+				uart_printstr (line);
+				loop_until_bit_is_clear(PINC, 7);
 
-			/* Do auth */
-			chcp_auth(chcp);
-			print_proc_counts(chcp->ck_proc, line, string);
-			print_secmem(chcp->security_memory, line, string);
+				/* Do auth */
+				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
+				print_proc_counts(chcp->ck_proc, line, string);
+				print_secmem(chcp->security_memory, line, string);
+			}
 		}
 
 		if (chcp->auth) {
 			/* authenticaded operations */
+			strcpy_P (line, PSTR("\n Writing cards with credit \n"));
+			uart_printstr (line);
+			memcpy(chcp->main_memory + 32, "CHARLIE", 7);
+			*(chcp->main_memory + 40) = 0x0a; /* 10 bucks */
+			chcp_write_memory(chcp, 32, 9);
+			strcpy_P (line, PSTR("done!\n"));
+			uart_printstr (line);
+			print_memory(chcp->main_memory, line, string);
 			/* green on */
 			PORTC = 1;
 		}
+
+		strcpy_P (line, PSTR("Now you can remove the card!\n"));
+		uart_printstr (line);
+
+		while (chcp_present(chcp)) {
+			if (!chcp->auth) {
+				/* blink red */
+				PORTC = 3; /* off */
+				_delay_ms(500);
+				PORTC = 2; /* RED on */
+			}
+
+			_delay_ms(500);
+		}
+
+		PORTC = 3; /* leds off */
+	}
+}
+
+void poor_slave(struct chcp_t *chcp, char *line, char *string)
+{
+	uint8_t credit_bucks;
+
+	strcpy_P (line, PSTR("Slave mode\n"));
+	uart_printstr (line);
+
+	for (;;) {
+		while (!chcp_present(chcp))
+			_delay_ms(1000);
+
+		chcp->auth = 0; /* Default to non-auth */
+		uart_putchar ('\n');
+		PORTC = 2; /* RED on */
+		_delay_ms(500);
+
+		chcp_reset(chcp->atr);
+
+		if (*(chcp->atr) == 162) {
+			chcp_dump_prt_memory(chcp->protected_memory);
+			chcp_dump_secmem(chcp->security_memory);
+			chcp_dump_memory(chcp->main_memory);
+			print_atr(chcp->atr, line, string);
+			print_prt_memory(chcp->protected_memory, line, string);
+			print_secmem(chcp->security_memory, line, string);
+			print_memory(chcp->main_memory, line, string);
+
+			if (credit_check(chcp)) {
+				strcpy_P (line, PSTR("\n Valid card with credit\n"));
+				uart_printstr (line);
+				strcpy_P (line, PSTR("\n Press 7 to auth \n"));
+				uart_printstr (line);
+
+				loop_until_bit_is_clear(PINC, 7);
+
+				/* Do auth */
+				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
+				print_proc_counts(chcp->ck_proc, line, string);
+				print_secmem(chcp->security_memory, line, string);
+			} else {
+				strcpy_P (line, PSTR("\n Error! - Non initialized card!\n"));
+				uart_printstr (line);
+			}
+		}
+
+		if (chcp->auth) {
+			/* authenticaded operations */
+			credit_bucks = credit_suck(chcp);
+			print_memory(chcp->main_memory, line, string);
+			/* green on */
+			PORTC = 1;
+		}
+
+		strcpy_P (line, PSTR("Now you can remove the card!\n"));
+		uart_printstr (line);
 
 		while (chcp_present(chcp)) {
 			if (!chcp->auth) {
@@ -94,8 +199,34 @@ int main(void)
 		PORTC = 3; /* leds off */
 	}
 
+}
+
+int main(void)
+{
+	struct chcp_t *chcp;
+	char *line;
+	char *string;
+
+	chcp = chcp_init();
+	uart_init();
+
+	DDRC = 3; /* PC0 - RED and PC1 - GREEN OUT */
+	PORTC = 3; /* leds off */
+
+	line = malloc(80);
+	string = malloc(20);
+
+	strcpy_P (line, PSTR("Chipcard SLE4442 rel: CHCP_VERSION \n\n"));
+	uart_printstr (line);
+
+	if (PINC & _BV(7))
+		poor_slave(chcp, line, string);
+	else
+		mastermind(chcp, line, string);
+
 	chcp_free(chcp);
 	free(line);
 	free(string);
+	return(0);
 }
 

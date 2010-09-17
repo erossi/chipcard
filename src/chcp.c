@@ -114,10 +114,8 @@ void chcp_dump_secmem(uint8_t *mm) {
 	ck_pulse(); /* leave the card to high imp. I/O line */
 }
 
-void chcp_auth(struct chcp_t *chcp)
+void chcp_auth(struct chcp_t *chcp, const uint8_t pin1, const uint8_t pin2, const uint8_t pin3)
 {
-	chcp->auth = 0;
-
 	/* dump secmem */
 	chcp_dump_secmem(chcp->security_memory);
 
@@ -129,11 +127,11 @@ void chcp_auth(struct chcp_t *chcp)
 		*(chcp->ck_proc) = processing();
 
 		/* Compare 3 byte PIN */
-		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 1, CHCP_PIN1);
+		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 1, pin1);
 		*(chcp->ck_proc + 1) = processing();
-		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 2, CHCP_PIN2);
+		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 2, pin2);
 		*(chcp->ck_proc + 2) = processing();
-		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 3, CHCP_PIN3);
+		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 3, pin3);
 		*(chcp->ck_proc + 3) = processing();
 
 		/* write 0xff to error */
@@ -147,5 +145,18 @@ void chcp_auth(struct chcp_t *chcp)
 	/* if error = 7 then auth is OK */
 	if (*(chcp->security_memory) == 7)
 		chcp->auth = 1;
+}
+
+void chcp_write_memory(struct chcp_t *chcp, const uint8_t base, const uint8_t len)
+{
+	uint8_t i, addr;
+
+	if (chcp->auth) {
+		for (i=0; i<len; i++) {
+			addr = base + i;
+		send_cmd(CHCP_CMD_UPDATE_MEMORY, addr, *(chcp->main_memory + addr));
+		*(chcp->ck_proc) = processing();
+		}
+	}
 }
 
