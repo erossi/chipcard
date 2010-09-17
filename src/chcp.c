@@ -50,11 +50,15 @@ struct chcp_t* chcp_init(void)
 	chcp->main_memory = malloc(256);
 	chcp->protected_memory = malloc(4);
 	chcp->security_memory = malloc(4);
+	/* Normally we should use only 1, but during the auth
+	   it's wise to keep all the 5 processing result */
+	chcp->ck_proc = malloc(5);
 	return(chcp);
 }
 
 void chcp_free(struct chcp_t *chcp)
 {
+	free(chcp->ck_proc);
 	free(chcp->security_memory);
 	free(chcp->protected_memory);
 	free(chcp->main_memory);
@@ -113,7 +117,6 @@ void chcp_dump_secmem(uint8_t *mm) {
 void chcp_auth(struct chcp_t *chcp)
 {
 	chcp->auth = 0;
-	chcp->ck_proc = 99;
 
 	/* dump secmem */
 	chcp_dump_secmem(chcp->security_memory);
@@ -123,19 +126,19 @@ void chcp_auth(struct chcp_t *chcp)
 
 		/* write 0 to bit 3 */
 		send_cmd(CHCP_CMD_UPDATE_SECMEM, 0, 3);
-		chcp->ck_proc = processing();
+		*(chcp->ck_proc) = processing();
 
 		/* Compare 3 byte PIN */
 		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 1, CHCP_PIN1);
-		chcp->ck_proc1 = processing();
+		*(chcp->ck_proc + 1) = processing();
 		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 2, CHCP_PIN2);
-		chcp->ck_proc2 = processing();
+		*(chcp->ck_proc + 2) = processing();
 		send_cmd(CHCP_CMD_COMPARE_VERIFICATION_DATA, 3, CHCP_PIN3);
-		chcp->ck_proc3 = processing();
+		*(chcp->ck_proc + 3) = processing();
 
 		/* write 0xff to error */
 		send_cmd(CHCP_CMD_UPDATE_SECMEM, 0, 0xff);
-		chcp->ck_proc4 = processing();
+		*(chcp->ck_proc + 4) = processing();
 
 		/* redump secmem */
 		chcp_dump_secmem(chcp->security_memory);

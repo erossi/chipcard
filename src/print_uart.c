@@ -40,29 +40,42 @@ void print_mm(uint8_t *mm, char *line, char *string, const int max)
 		uart_printstr (line);
 		uart_putchar ('\n');
 	}
+
+	uart_putchar ('\n');
 }
 
 void print_atr(uint8_t *atr, char *line, char *string)
 {
 	strcpy_P (line, PSTR("-> ATR Bytes ----\n"));
+	uart_printstr (line);
 	print_mm(atr, line, string, 4);
 }
 
-void print_memory(uint8_t *atr, char *line, char *string)
+void print_memory(uint8_t *mm, char *line, char *string)
 {
 	strcpy_P (line, PSTR("-> Main Memory Bytes ----\n"));
-	print_mm(atr, line, string, 256);
+	uart_printstr (line);
+	print_mm(mm, line, string, 256);
 }
 
-void print_prt_memory(uint8_t *atr, char *line, char *string)
+void print_prt_memory(uint8_t *pm, char *line, char *string)
 {
 	strcpy_P (line, PSTR("-> Protected Memory Bytes ----\n"));
-	print_mm(atr, line, string, 4);
+	uart_printstr (line);
+	print_mm(pm, line, string, 4);
 }
 
-void print_secmem(uint8_t *atr, char *line, char *string)
+void print_secmem(uint8_t *sm, char *line, char *string)
 {
 	strcpy_P (line, PSTR("-> Security Memory Bytes ----\n"));
-	print_mm(atr, line, string, 4);
+	uart_printstr (line);
+	print_mm(sm, line, string, 4);
+}
+
+void print_proc_counts(uint8_t *pc, char *line, char *string)
+{
+	strcpy_P (line, PSTR("-> Auth Proccessing times ----\n"));
+	uart_printstr (line);
+	print_mm(pc, line, string, 5);
 }
 

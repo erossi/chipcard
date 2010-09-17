@@ -34,13 +34,9 @@ struct chcp_t {
 	uint8_t *main_memory; /* 256 bytes */
 	uint8_t *protected_memory; /* 32 bytes */
 	uint8_t *security_memory; /* 4 Bytes */
+	uint8_t *ck_proc; /* processing clock counts */
 	uint8_t card_present;
 	uint8_t auth;
-	int ck_proc; /* numbers of clock counts during processing */
-	int ck_proc1;
-	int ck_proc2;
-	int ck_proc3;
-	int ck_proc4;
 };
 
 struct chcp_t* chcp_init(void);

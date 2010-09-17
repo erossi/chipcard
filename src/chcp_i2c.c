@@ -151,9 +151,9 @@ void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
 	send_stop();
 }
 
-int processing(void)
+uint8_t processing(void)
 {
-	int i = 1;
+	uint8_t i = 0;
 
 	while (!(CHPC_PIN & _BV(CHPC_IO))) {
 		ck_pulse();

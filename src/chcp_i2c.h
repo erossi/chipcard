@@ -52,5 +52,5 @@ uint8_t read_byte(void);
 void send_byte(uint8_t byte);
 void send_rst(uint8_t *atr);
 void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data);
-int processing(void);
+uint8_t processing(void);
 

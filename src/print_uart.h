@@ -20,4 +20,5 @@ void print_atr(uint8_t *atr, char *line, char *string);
 void print_memory(uint8_t *atr, char *line, char *string);
 void print_prt_memory(uint8_t *atr, char *line, char *string);
 void print_secmem(uint8_t *atr, char *line, char *string);
+void print_proc_counts(uint8_t *pc, char *line, char *string);
 

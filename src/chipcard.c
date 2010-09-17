@@ -53,62 +53,30 @@ int main(void)
 
 		chcp_reset(chcp->atr);
 
-		if (*(chcp->atr) == 168) {
-			chcp_reset(chcp->atr);
+		if (*(chcp->atr) == 162) {
+			chcp_dump_prt_memory(chcp->protected_memory);
+			chcp_dump_secmem(chcp->security_memory);
+			chcp_dump_memory(chcp->main_memory);
+			print_atr(chcp->atr, line, string);
+			print_prt_memory(chcp->protected_memory, line, string);
+			print_secmem(chcp->security_memory, line, string);
+			print_memory(chcp->main_memory, line, string);
+
+			strcpy_P (string, PSTR("Press 7 to auth \n"));
+			strcat (line, string);
+			uart_printstr (line);
+
+			loop_until_bit_is_clear(PINC, 7);
+
+			/* Do auth */
+			chcp_auth(chcp);
+			print_proc_counts(chcp->ck_proc, line, string);
+			print_secmem(chcp->security_memory, line, string);
 		}
-
-		chcp_dump_prt_memory(chcp->protected_memory);
-		chcp_dump_secmem(chcp->security_memory);
-		print_atr(chcp->atr, line, string);
-		print_prt_memory(chcp->protected_memory, line, string);
-		print_secmem(chcp->security_memory, line, string);
-
-		/*
-		chcp_dump_memory(chcp->main_memory);
-		print_memory(chcp->main_memory, line, string);
-*/
-
-		loop_until_bit_is_clear(PINC, 7);
-
-		/* Do auth */
-		chcp_auth(chcp);
-
-		strcpy_P (line, PSTR("DEBUG proc: "));
-		string = itoa(chcp->ck_proc, string, 10);
-		strcat (line, string);
-
-		strcpy_P (string, PSTR(", "));
-		strcat (line, string);
-
-		string = itoa(chcp->ck_proc1, string, 10);
-		strcat (line, string);
-
-		strcpy_P (string, PSTR(", "));
-		strcat (line, string);
-		
-		string = itoa(chcp->ck_proc2, string, 10);
-		strcat (line, string);
-		
-		strcpy_P (string, PSTR(", "));
-		strcat (line, string);
-		
-		string = itoa(chcp->ck_proc3, string, 10);
-		strcat (line, string);
-		
-		strcpy_P (string, PSTR(", "));
-		strcat (line, string);
-		
-		string = itoa(chcp->ck_proc4, string, 10);
-		strcat (line, string);
-		
-		uart_printstr (line);
-		uart_putchar ('\n');
-
-		print_secmem(chcp->security_memory, line, string);
 
 		if (chcp->auth) {
 			/* authenticaded operations */
-		 /* green on */
+			/* green on */
 			PORTC = 1;
 		}
 
@@ -123,7 +91,7 @@ int main(void)
 			_delay_ms(500);
 		}
 
-		PORTC = 3;
+		PORTC = 3; /* leds off */
 	}
 
 	chcp_free(chcp);
