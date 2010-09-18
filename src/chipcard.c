@@ -19,11 +19,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/sleep.h>
 #include <util/delay.h>
 #include "chcp.h"
 #include "uart.h"
 #include "print_uart.h"
+
+/* Global used in interrupt */
+int credit_bucks;
+
+ISR(TIMER1_OVF_vect)
+{
+	/*
+	   Weaking up from sleep, decrement credit by 1
+	   */
+	credit_bucks--;
+}
 
 uint8_t credit_check(struct chcp_t *chcp)
 {
@@ -52,6 +65,27 @@ uint8_t credit_suck(struct chcp_t *chcp)
 	}
 
 	return(bucks);
+}
+
+void counter_setup(void)
+{
+	TCCR1A = 0;
+	TCCR1B = 0;
+
+	/* enable interrupt on timer 1 overflow
+	   use include deprecated.h to use the function */
+	TIMSK = _BV(TOIE1);
+}
+
+void counter_start(void)
+{
+	/* counter prescaler 1024 */
+	TCCR1B = _BV(CS12) | _BV(CS10);
+}
+
+void counter_stop(void)
+{
+	TCCR1B = 0;
 }
 
 void mastermind(struct chcp_t *chcp, char *line, char *string)
@@ -131,8 +165,6 @@ void mastermind(struct chcp_t *chcp, char *line, char *string)
 
 void poor_slave(struct chcp_t *chcp, char *line, char *string)
 {
-	uint8_t credit_bucks;
-
 	strcpy_P (line, PSTR("Slave mode\n"));
 	uart_printstr (line);
 
@@ -196,9 +228,29 @@ void poor_slave(struct chcp_t *chcp, char *line, char *string)
 			_delay_ms(500);
 		}
 
+		/* test the counter */
+		sleep_enable();
+
+		while (credit_bucks) {
+			/* start the counter */
+			counter_start();
+			/* sleep */
+			sleep_cpu();
+			/* awakening */
+			/* stop the counter */
+			counter_stop();
+			strcpy_P (line, PSTR("Awake with bucks: "));
+			string = itoa(credit_bucks, string, 10);
+			strcat (line, string);
+			uart_printstr (line);
+			uart_putchar ('\n');
+			_delay_ms(200);
+		}
+
+		sleep_disable();
+
 		PORTC = 3; /* leds off */
 	}
-
 }
 
 int main(void)
@@ -213,6 +265,14 @@ int main(void)
 	DDRC = 3; /* PC0 - RED and PC1 - GREEN OUT */
 	PORTC = 3; /* leds off */
 
+	counter_setup();
+	/*
+	set_sleep_mode(SLEEP_MODE_EXT_STANDBY);
+	*/
+	set_sleep_mode(SLEEP_MODE_IDLE);
+
+	sei();
+
 	line = malloc(80);
 	string = malloc(20);
 
@@ -224,6 +284,7 @@ int main(void)
 	else
 		mastermind(chcp, line, string);
 
+	cli();
 	chcp_free(chcp);
 	free(line);
 	free(string);
