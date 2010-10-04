@@ -70,7 +70,7 @@ void chcp_reset(uint8_t *atr) {
 	send_rst(atr);
 }
 
-/* return 0 = card not preset or some other integer */
+/*! \brief Check for the presence of the card. */
 uint8_t chcp_present(struct chcp_t *chcp) {
 
 	if (CHPC_PIN & _BV(CHPC_PRESENT))

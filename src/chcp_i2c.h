@@ -15,6 +15,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+  \file chcp_bbg.h
+  \brief Bit banging routine to SLE4442.
+
+  Low level bit banging driver to read and write to
+  Sle4442 card.
+
+   green led
+   red led
+   chcp present
+   chcp reset
+   chcp alim
+   chcp ck
+   chcp io
+
+   rtc PC6/7
+   rs232 PD0/1
+   in circuit prg pb567
+ */
+
+/*!
+  \def CHPC_PORT
+  \brief Port the card's reader is conneted to.
+
+  \def CHPC_PRESENT
+  \brief PIN connected to the present card switch
+
+  \def CHPC_RST
+  \brief PIN connected to the reset pin of the card.
+
+  \def CHPC_CK
+  \brief clock pin of the card
+
+  \def CHPC_IO
+  \brief I/O pin of the card.
+*/
+
 #define CHPC_PORT PORTA
 #define CHPC_PIN PINA
 #define CHPC_DDR DDRA

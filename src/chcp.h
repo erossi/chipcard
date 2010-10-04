@@ -15,8 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+  \file chcp.h
+  \brief This is the API avariable to access to SLE4442.
+
+  Details.
+ */
+
 #ifndef CHCP_H_
 #define CHCP_H_
+
+/*!
+  \def CHCP_CMD_DUMP_MEMORY
+  \brief SLE4442 Hex command to access the main memory.
+
+  \def CHCP_CMD_DUMP_SECMEM
+  \brief SLE4442 Hex command to access the security memory.
+
+  \def CHCP_CMD_DUMP_PRT_MEMORY
+  \brief SLE4442 Hex command to access the protected memory.
+ */
 
 #define CHCP_VERSION 0.1
 #define CHCP_CMD_DUMP_MEMORY 0x30
@@ -31,15 +49,46 @@
 #define CHCP_PIN2 0xFF
 #define CHCP_PIN3 0xFF
 
-/* Keep in mind AtMega chips have only 1 KB RAM */
+/*!
+  \struct chcp_t chcp.h "chcp.h"
+  \brief The main struct which represent the status of the card.
+
+  Keep in mind AtMega chips have only 1 KB RAM, dumping all the
+  card memory into RAM may cause an out of memory.
+
+  \var uint8_t *chcp_t::atr
+  \brief ptr to a 4 bytes ATR header returned by the ATZ command.
+
+  \var uint8_t *chcp_t::main_memory
+  \brief ptr to a 256 bytes copy of the SLE 4442 memory.
+
+  \var uint8_t *chcp_t::protected_memory
+  \brief ptr to a 32 bytes copy of the SLE 4442 memory.
+
+  \var uint8_t* chcp_t::security_memory
+  \brief 4 bytes
+
+  \var uint8_t* chcp_t::ck_proc
+  \brief processing clock counts
+
+  \var uint8_t chcp_t::card_present
+  \brief card present 0=no; 1=yes
+
+  \var uint8_t chcp_t::auth
+  \brief card auth 1 - ok, 0 - writing forbidden
+
+  auth ok, I can write
+
+ */
+
 struct chcp_t {
-	uint8_t *atr; /* 4 bytes */
-	uint8_t *main_memory; /* 256 bytes */
-	uint8_t *protected_memory; /* 32 bytes */
-	uint8_t *security_memory; /* 4 Bytes */
-	uint8_t *ck_proc; /* processing clock counts */
+	uint8_t *atr;
+	uint8_t *main_memory;
+	uint8_t *protected_memory;
+	uint8_t *security_memory;
+	uint8_t *ck_proc;
 	uint8_t card_present;
-	uint8_t auth; /* 1 = auth ok, I can write */
+	uint8_t auth;
 };
 
 struct chcp_t* chcp_init(void);
