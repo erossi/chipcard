@@ -37,19 +37,19 @@
 
 /*!
   \def CHPC_PORT
-  \brief Port the card's reader is conneted to.
+  Port the card's reader is conneted to.
 
   \def CHPC_PRESENT
-  \brief PIN connected to the present card switch
+  PIN connected to the present card switch
 
   \def CHPC_RST
-  \brief PIN connected to the reset pin of the card.
+  PIN connected to the reset pin of the card.
 
   \def CHPC_CK
-  \brief clock pin of the card
+  clock pin of the card
 
   \def CHPC_IO
-  \brief I/O pin of the card.
+  I/O pin of the card.
 */
 
 #define CHPC_PORT PORTA
@@ -62,17 +62,32 @@
 #define OUT 2
 #define IN 3
 
-/* Macro */
-/*
-   10Khz = 100usec
-   20Khz = 50usec, half wave = 25 usec
-   Remeber delay is only HALF of the freq.
-   20Khz total
+/*!
+  \def ck_delay()
+  The delay in usec for half of the wave.
+  10Khz = 100usec
+  20Khz = 50usec, half wave = 25 usec
+  Remeber delay is only HALF of the freq.
+  20Khz total
+
+  \def ck_delay_front()
+  The MIN delay for a front phase between fronts of ck
+  and/or rst and/or IO
+
+  \def ck_delay_reset()
+  delay reset = 1.
+  \def set_ck_1
+  CK line to 1.
+  \def set_ck_0
+  CK line to 0.
+  \def set_rst_1
+  RST line to 1.
+  \def set_rst_0
+  RST line to 0.
  */
+
 #define ck_delay() _delay_us(25)
-/* delay between fronts of ck and/or rst and/or IO */
 #define ck_delay_front() _delay_us(4)
-/* delay reset = 1 */
 #define ck_delay_reset() _delay_us(50)
 #define set_ck_1 CHPC_PORT |= (1<<CHPC_CK)
 #define set_ck_0 CHPC_PORT &= ~(1<<CHPC_CK)
@@ -81,10 +96,6 @@
 
 void ck_pulse(void);
 void set_io(const uint8_t io);
-/*
-   void set_rst(const uint8_t rst);
-   void set_ck(const uint8_t ck);
- */
 uint8_t read_byte(void);
 void send_byte(uint8_t byte);
 void send_rst(uint8_t *atr);

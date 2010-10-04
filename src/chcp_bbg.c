@@ -15,13 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+  \file chcp_bbg.c
+  \brief Bit banging routine to SLE4442.
+
+  Low level bit banging driver to read and write to
+  Sle4442 card.
+  */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include "chcp_bbg.h"
 
-/* a single clock pulse */
+/*! single clock pulse */
 void ck_pulse(void)
 {
 	set_ck_1;
@@ -30,13 +38,10 @@ void ck_pulse(void)
 	ck_delay();
 }
 
-/*
-   0 in out mode send 0 to I/O line
-   1 in out mode send 1 to I/O line
-   IN switch I/O to input
-   OUT switch I/O to output
+/*! Set's I/O line to IN, OUT, 0 or 1.
+  \details When in In mode the 0 or 1 command internal pull up resistor.
+  \param[in] io 0 - 3 = 0, 1, IN, OUT
  */
-
 void set_io(const uint8_t io)
 {
 	switch (io) {
@@ -55,7 +60,9 @@ void set_io(const uint8_t io)
 	}
 }
 
-/* This sets IO to OUT */
+/*! Send the START sequence.
+  \warning This will also sets IO to OUT.
+ */
 void send_start(void)
 {
 	set_ck_0; /* redundancy */
@@ -69,7 +76,9 @@ void send_start(void)
 	ck_delay();
 }
 
-/* This sets IO from OUT to IN */
+/*! Send the STOP sequence.
+  \warinig This sets IO from OUT to IN
+ */
 void send_stop(void)
 {
 	set_io(0);
@@ -82,7 +91,7 @@ void send_stop(void)
 	ck_delay();
 }
 
-/* read io bit on the 1 phase of the ck line */
+/*! read io bit on the 1 phase of the ck line */
 uint8_t read_byte(void)
 {
 	uint8_t i;
@@ -102,7 +111,7 @@ uint8_t read_byte(void)
 	return(byte);
 }
 
-/* write io bit on the 0 phase of the ck line */
+/*! write io bit on the 0 phase of the ck line */
 void send_byte(uint8_t byte)
 {
 	uint8_t i;
@@ -121,6 +130,7 @@ void send_byte(uint8_t byte)
 	}
 }
 
+/*! send the rst sequence to the card */
 void send_rst(uint8_t *atr)
 {
 	uint8_t i;
@@ -141,7 +151,9 @@ void send_rst(uint8_t *atr)
 	}
 }
 
-/* After a command IO in IN */
+/*! send a complete command sequence.
+  \warning After a command IO in IN.
+ */
 void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
 {
 	send_start();
@@ -150,6 +162,10 @@ void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
 	send_byte(data);
 	send_stop();
 }
+
+/*! wait for the card to process the command.
+  \return the number of clock cycle waited.
+ */
 
 uint8_t processing(void)
 {
