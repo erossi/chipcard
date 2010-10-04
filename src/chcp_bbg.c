@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <util/delay.h>
-#include "chcp_i2c.h"
+#include "chcp_bbg.h"
 
 /* a single clock pulse */
 void ck_pulse(void)

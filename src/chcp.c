@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <avr/io.h>
-#include "chcp_i2c.h"
+#include "chcp_bbg.h"
 #include "chcp.h"
 
 struct chcp_t* chcp_init(void)
