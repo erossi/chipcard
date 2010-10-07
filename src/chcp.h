@@ -44,11 +44,6 @@
 #define CHCP_CMD_UPDATE_SECMEM 0x39
 #define CHCP_CMD_UPDATE_MEMORY 0x38
 
-/* The top secret pin */
-#define CHCP_PIN1 0xFF
-#define CHCP_PIN2 0xFF
-#define CHCP_PIN3 0xFF
-
 /*!
   \struct chcp_t chcp.h "chcp.h"
   \brief The main struct which represent the status of the card.

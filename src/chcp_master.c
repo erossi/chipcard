@@ -23,6 +23,7 @@
 #include <avr/sleep.h>
 #include <util/delay.h>
 #include "chcp.h"
+#include "chcp_pin.h"
 #include "uart.h"
 #include "print_uart.h"
 #include "chcp_credit.h"
