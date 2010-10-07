@@ -166,7 +166,6 @@ void send_cmd(const uint8_t control, const uint8_t address, const uint8_t data)
 /*! wait for the card to process the command.
   \return the number of clock cycle waited.
  */
-
 uint8_t processing(void)
 {
 	uint8_t i = 0;
