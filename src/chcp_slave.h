@@ -15,38 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include "chcp.h"
-#include "chcp_credit.h"
+#ifndef CHCP_SLAVE_H
+#define CHCP_SLAVE_H
 
-uint8_t credit_check(struct chcp_t *chcp)
-{
-	int result;
-	uint8_t bucks;
+void slave(struct chcp_t *chcp, char *line, char *string);
 
-	result = memcmp(chcp->main_memory + 32, "CHARLIE", 7);
-	bucks = *(chcp->main_memory + 40);
-
-	if (bucks && !result)
-		return(1);
-	else
-		return(0);
-}
-
-uint8_t credit_suck(struct chcp_t *chcp)
-{
-	uint8_t bucks;
-
-	bucks = *(chcp->main_memory + 40);
-
-	/* clear bucks in the card */
-	if (bucks) {
-		*(chcp->main_memory + 40) = 0;
-		chcp_write_memory(chcp, 40, 1);
-	}
-
-	return(bucks);
-}
-
+#endif
