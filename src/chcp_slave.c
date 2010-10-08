@@ -18,13 +18,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
 #include "chcp.h"
 #include "chcp_pin.h"
 #include "debug.h"
+#include "led.h"
 #include "chcp_credit.h"
 #include "chcp_counter.h"
 #include "chcp_slave.h"
@@ -39,9 +39,8 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 			_delay_ms(1000);
 
 		chcp->auth = 0; /* Default to non-auth */
-		PORTC = 2; /* RED on */
+		led_set(RED, ON);
 		_delay_ms(500);
-
 		chcp_reset(chcp->atr);
 
 		if (*(chcp->atr) == 162) {
@@ -55,7 +54,8 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 
 			if (credit_check(chcp)) {
 				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-				debug_print_P(PSTR("\n  Press 7 to auth \n"), debug);
+				debug_print_P(PSTR("\n Press 7 to auth\n"), debug);
+				/* FIX ME */
 				loop_until_bit_is_clear(PINC, 7);
 
 				/* Do auth */
@@ -72,18 +72,14 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 			credit_bucks = credit_suck(chcp);
 			debug_memory(chcp->main_memory, debug);
 			/* green on */
-			PORTC = 1;
+			led_set(GREEN, ON);
 		}
 
 		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
 		while (chcp_present(chcp)) {
-			if (!chcp->auth) {
-				/* blink red */
-				PORTC = 3; /* off */
-				_delay_ms(500);
-				PORTC = 2; /* RED on */
-			}
+			if (!chcp->auth)
+				led_set(RED, BLINK);
 
 			_delay_ms(500);
 		}
@@ -108,7 +104,7 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 		}
 
 		sleep_disable();
-		PORTC = 3; /* leds off */
+		led_set(NONE, OFF);
 	}
 }
 

@@ -18,7 +18,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
@@ -83,7 +82,7 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 
 		while (chcp_present(chcp)) {
 			if (!chcp->auth)
-				led_set(BLINK, RED);
+				led_set(RED, BLINK);
 
 			_delay_ms(500);
 		}
