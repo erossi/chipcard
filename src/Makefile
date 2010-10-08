@@ -18,8 +18,8 @@ DUDE = avrdude -c $(DUDEDEV) -p $(MCU) -P $(DUDEPORT) -e -U flash:w:$(PRGNAME).h
 REMOVE = rm -f
 
 chcp_lib_obj = chcp_bbg.o chcp.o
-uart_obj = uart.o print_uart.o
-objects = $(uart_obj) debug.o chcp_counter.o
+uart_obj = uart.o debug.o
+objects = $(uart_obj) chcp_counter.o
 objects += chcp_master.o chcp_slave.o chcp_credit.o
 
 GITRELEASE = "\"$(shell git describe --tags)\""

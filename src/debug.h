@@ -45,6 +45,11 @@ struct debug_t {
 
 void debug_print_P(PGM_P string, struct debug_t *debug);
 void debug_print(struct debug_t *debug);
+void debug_atr(uint8_t *atr, struct debug_t *debug);
+void debug_memory(uint8_t *mm, struct debug_t *debug);
+void debug_prt_memory(uint8_t *pm, struct debug_t *debug);
+void debug_secmem(uint8_t *sm, struct debug_t *debug);
+void debug_proc_counts(uint8_t *pc, struct debug_t *debug);
 struct debug_t *debug_init(void);
 void debug_free(struct debug_t *debug);
 

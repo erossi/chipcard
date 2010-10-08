@@ -23,7 +23,6 @@
 #include <util/delay.h>
 #include "chcp.h"
 #include "uart.h"
-#include "print_uart.h"
 #include "debug.h"
 
 void debug_print_P(PGM_P string, struct debug_t *debug)
@@ -53,6 +52,55 @@ static void hello(struct debug_t *debug)
 static uint8_t ask_activate(void)
 {
 	return(1);
+}
+
+static void dbg_mem(uint8_t *mm, const int max, struct debug_t *debug)
+{
+	int i;
+
+	for (i=0; i<max; i++) {
+		strcpy_P (debug->line, PSTR("\nByte: "));
+		debug->string = utoa(i, debug->string, 10);
+		strcat (debug->line, debug->string);
+		strcpy_P (debug->string, PSTR(" = "));
+		strcat (debug->line, debug->string);
+		debug->string = utoa(*(mm+i), debug->string, 10);
+		strcat (debug->line, debug->string);
+		uart_printstr (debug->line);
+		uart_putchar ('\n');
+	}
+
+	uart_putchar ('\n');
+}
+
+void debug_atr(uint8_t *atr, struct debug_t *debug)
+{
+	debug_print_P(PSTR("-> ATR Bytes ----\n"), debug);
+	dbg_mem(atr, 4, debug);
+}
+
+void debug_memory(uint8_t *mm, struct debug_t *debug)
+{
+	debug_print_P(PSTR("-> Main Memory Bytes ----\n"), debug);
+	dbg_mem(mm, 256, debug);
+}
+
+void debug_prt_memory(uint8_t *pm, struct debug_t *debug)
+{
+	debug_print_P(PSTR("-> Protected Memory Bytes ----\n"), debug);
+	dbg_mem(pm, 4, debug);
+}
+
+void debug_secmem(uint8_t *sm, struct debug_t *debug)
+{
+	debug_print_P(PSTR("-> Security Memory Bytes ----\n"), debug);
+	dbg_mem(sm, 4, debug);
+}
+
+void debug_proc_counts(uint8_t *pc, struct debug_t *debug)
+{
+	debug_print_P(PSTR("-> Auth Proccessing times ----\n"), debug);
+	dbg_mem(pc, 5, debug);
 }
 
 struct debug_t *debug_init(void)

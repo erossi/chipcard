@@ -25,21 +25,13 @@
 #include "chcp.h"
 #include "chcp_pin.h"
 #include "debug.h"
-#include "print_uart.h"
 #include "chcp_credit.h"
 #include "chcp_master.h"
 
 void master(struct chcp_t *chcp, struct debug_t *debug)
 {
-	char *line;
-	char *string;
-
 	if (debug->active)
 		debug_print_P(PSTR("Master mode\n"), debug);
-
-	/* fix me */
-	line = debug->line;
-	string = debug->string;
 
 	for (;;) {
 		while (!chcp_present(chcp))
@@ -55,10 +47,10 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 			chcp_dump_prt_memory(chcp->protected_memory);
 			chcp_dump_secmem(chcp->security_memory);
 			chcp_dump_memory(chcp->main_memory);
-			print_atr(chcp->atr, line, string);
-			print_prt_memory(chcp->protected_memory, line, string);
-			print_secmem(chcp->security_memory, line, string);
-			print_memory(chcp->main_memory, line, string);
+			debug_atr(chcp->atr, debug);
+			debug_prt_memory(chcp->protected_memory, debug);
+			debug_secmem(chcp->security_memory, debug);
+			debug_memory(chcp->main_memory, debug);
 
 			if (credit_check(chcp)) {
 				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
@@ -69,8 +61,8 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 
 				/* Do auth */
 				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-				print_proc_counts(chcp->ck_proc, line, string);
-				print_secmem(chcp->security_memory, line, string);
+				debug_proc_counts(chcp->ck_proc, debug);
+				debug_secmem(chcp->security_memory, debug);
 			}
 		}
 
@@ -81,7 +73,7 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 			*(chcp->main_memory + 40) = 0x0a; /* 10 bucks */
 			chcp_write_memory(chcp, 32, 9);
 			debug_print_P(PSTR("done!\n"), debug);
-			print_memory(chcp->main_memory, line, string);
+			debug_memory(chcp->main_memory, debug);
 			/* green on */
 			PORTC = 1;
 		}
