@@ -23,8 +23,7 @@
 #include <avr/sleep.h>
 #include "chcp.h"
 #include "chcp_counter.h"
-#include "uart.h"
-#include "print_uart.h"
+#include "debug.h"
 #include "chcp_master.h"
 #include "chcp_slave.h"
 
@@ -33,11 +32,10 @@ extern int credit_bucks;
 int main(void)
 {
 	struct chcp_t *chcp;
-	char *line;
-	char *string;
+	struct debug_t *debug;
 
 	chcp = chcp_init();
-	uart_init();
+	debug = debug_init();
 
 	DDRC = 3; /* PC0 - RED and PC1 - GREEN OUT */
 	PORTC = 3; /* leds off */
@@ -50,21 +48,14 @@ int main(void)
 
 	sei();
 
-	line = malloc(80);
-	string = malloc(20);
-
-	strcpy_P (line, PSTR("Chipcard SLE4442 rel: CHCP_VERSION \n\n"));
-	uart_printstr (line);
-
 	if (PINC & _BV(7))
-		slave(chcp, line, string);
+		slave(chcp, debug);
 	else
-		master(chcp, line, string);
+		master(chcp, debug);
 
 	cli();
+	debug_free(debug);
 	chcp_free(chcp);
-	free(line);
-	free(string);
 	return(0);
 }
 

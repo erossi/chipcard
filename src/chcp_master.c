@@ -24,22 +24,28 @@
 #include <util/delay.h>
 #include "chcp.h"
 #include "chcp_pin.h"
-#include "uart.h"
+#include "debug.h"
 #include "print_uart.h"
 #include "chcp_credit.h"
 #include "chcp_master.h"
 
-void master(struct chcp_t *chcp, char *line, char *string)
+void master(struct chcp_t *chcp, struct debug_t *debug)
 {
-	strcpy_P (line, PSTR("Master mode\n"));
-	uart_printstr (line);
+	char *line;
+	char *string;
+
+	if (debug->active)
+		debug_print_P(PSTR("Master mode\n"), debug);
+
+	/* fix me */
+	line = debug->line;
+	string = debug->string;
 
 	for (;;) {
 		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
 		chcp->auth = 0; /* Default to non-auth */
-		uart_putchar ('\n');
 		PORTC = 2; /* RED on */
 		_delay_ms(500);
 
@@ -55,14 +61,10 @@ void master(struct chcp_t *chcp, char *line, char *string)
 			print_memory(chcp->main_memory, line, string);
 
 			if (credit_check(chcp)) {
-				strcpy_P (line, PSTR("\n Valid card with credit\n"));
-				uart_printstr (line);
-				strcpy_P (line, PSTR("\n Insert a blank card please! \n"));
-				uart_printstr (line);
-
+				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
+				debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
 			} else {
-				strcpy_P (line, PSTR("\n New card! Press 7 to auth \n"));
-				uart_printstr (line);
+				debug_print_P(PSTR("\n New card! Press 7 to auth \n"), debug);
 				loop_until_bit_is_clear(PINC, 7);
 
 				/* Do auth */
@@ -74,20 +76,17 @@ void master(struct chcp_t *chcp, char *line, char *string)
 
 		if (chcp->auth) {
 			/* authenticaded operations */
-			strcpy_P (line, PSTR("\n Writing cards with credit \n"));
-			uart_printstr (line);
+			debug_print_P(PSTR("\n Writing cards with credit \n"), debug);
 			memcpy(chcp->main_memory + 32, "CHARLIE", 7);
 			*(chcp->main_memory + 40) = 0x0a; /* 10 bucks */
 			chcp_write_memory(chcp, 32, 9);
-			strcpy_P (line, PSTR("done!\n"));
-			uart_printstr (line);
+			debug_print_P(PSTR("done!\n"), debug);
 			print_memory(chcp->main_memory, line, string);
 			/* green on */
 			PORTC = 1;
 		}
 
-		strcpy_P (line, PSTR("Now you can remove the card!\n"));
-		uart_printstr (line);
+		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
 		while (chcp_present(chcp)) {
 			if (!chcp->auth) {

@@ -36,7 +36,6 @@
   \brief SLE4442 Hex command to access the protected memory.
  */
 
-#define CHCP_VERSION 0.1
 #define CHCP_CMD_DUMP_MEMORY 0x30
 #define CHCP_CMD_DUMP_SECMEM 0x31
 #define CHCP_CMD_DUMP_PRT_MEMORY 0x34

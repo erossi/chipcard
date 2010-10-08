@@ -18,7 +18,7 @@
 #ifndef CHCP_MASTER_H
 #define CHCP_MASTER_H
 
-void master(struct chcp_t *chcp, char *line, char *string);
+void master(struct chcp_t *chcp, struct debug_t *debug);
 
 #endif
 

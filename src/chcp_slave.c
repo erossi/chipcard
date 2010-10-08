@@ -19,29 +19,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
 #include "chcp.h"
 #include "chcp_pin.h"
+#include "debug.h"
 #include "uart.h"
 #include "print_uart.h"
 #include "chcp_credit.h"
 #include "chcp_counter.h"
 #include "chcp_slave.h"
 
-void slave(struct chcp_t *chcp, char *line, char *string)
+void slave(struct chcp_t *chcp, struct debug_t *debug)
 {
-	strcpy_P (line, PSTR("Slave mode\n"));
-	uart_printstr (line);
+	char *line;
+	char *string;
+
+	if (debug->active)
+		debug_print_P(PSTR("Slave mode\n"), debug);
+
+	/* fix me */
+	line = debug->line;
+	string = debug->string;
 
 	for (;;) {
 		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
 		chcp->auth = 0; /* Default to non-auth */
-		uart_putchar ('\n');
 		PORTC = 2; /* RED on */
 		_delay_ms(500);
 
@@ -57,11 +63,8 @@ void slave(struct chcp_t *chcp, char *line, char *string)
 			print_memory(chcp->main_memory, line, string);
 
 			if (credit_check(chcp)) {
-				strcpy_P (line, PSTR("\n Valid card with credit\n"));
-				uart_printstr (line);
-				strcpy_P (line, PSTR("\n Press 7 to auth \n"));
-				uart_printstr (line);
-
+				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
+				debug_print_P(PSTR("\n  Press 7 to auth \n"), debug);
 				loop_until_bit_is_clear(PINC, 7);
 
 				/* Do auth */
@@ -69,8 +72,7 @@ void slave(struct chcp_t *chcp, char *line, char *string)
 				print_proc_counts(chcp->ck_proc, line, string);
 				print_secmem(chcp->security_memory, line, string);
 			} else {
-				strcpy_P (line, PSTR("\n Error! - Non initialized card!\n"));
-				uart_printstr (line);
+				debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
 			}
 		}
 
@@ -82,8 +84,7 @@ void slave(struct chcp_t *chcp, char *line, char *string)
 			PORTC = 1;
 		}
 
-		strcpy_P (line, PSTR("Now you can remove the card!\n"));
-		uart_printstr (line);
+		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
 		while (chcp_present(chcp)) {
 			if (!chcp->auth) {
@@ -107,16 +108,15 @@ void slave(struct chcp_t *chcp, char *line, char *string)
 			/* awakening */
 			/* stop the counter */
 			counter_stop();
-			strcpy_P (line, PSTR("Awake with bucks: "));
+			debug_print_P(PSTR("Awake with bucks: "), debug);
 			string = itoa(credit_bucks, string, 10);
-			strcat (line, string);
-			uart_printstr (line);
-			uart_putchar ('\n');
+			strcpy(line, string);
+			strcat(line, "\n");
+			debug_print(debug);
 			_delay_ms(200);
 		}
 
 		sleep_disable();
-
 		PORTC = 3; /* leds off */
 	}
 }
