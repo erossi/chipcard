@@ -33,6 +33,8 @@ Substrings are used to compose the line when, for example,
 conversions have to be made from int to string etc. */
 #define MAX_STRING_LENGHT 20
 
+#define PRINT_VALUE_X_LINE 16
+
 /*! The main debug structure, it has to be allocated,
   eventually, if debug is not active, you can avoid the
   allocation of the two members char *.

@@ -56,18 +56,31 @@ static uint8_t ask_activate(void)
 
 static void dbg_mem(uint8_t *mm, const int max, struct debug_t *debug)
 {
-	int i;
+	int i=0;
+	uint8_t j;
 
-	for (i=0; i<max; i++) {
-		strcpy_P (debug->line, PSTR("\nByte: "));
-		debug->string = utoa(i, debug->string, 10);
+	while (i<max) {
+		strcpy_P (debug->line, PSTR("Byte ["));
+		debug->string = utoa(i, debug->string, 16);
 		strcat (debug->line, debug->string);
-		strcpy_P (debug->string, PSTR(" = "));
+		strcpy_P (debug->string, PSTR(" - "));
 		strcat (debug->line, debug->string);
-		debug->string = utoa(*(mm+i), debug->string, 10);
+		debug->string = utoa(i + PRINT_VALUE_X_LINE - 1, debug->string, 16);
 		strcat (debug->line, debug->string);
+		strcpy_P (debug->string, PSTR("]: "));
+		strcat (debug->line, debug->string);
+
+		for (j=0; j < PRINT_VALUE_X_LINE; j++)
+			if ((i+j) < max) {
+				debug->string = utoa(*(mm+i+j), debug->string, 16);
+				strcat (debug->line, debug->string);
+				strcpy_P (debug->string, PSTR(" "));
+				strcat (debug->line, debug->string);
+			}
+
 		uart_printstr (debug->line);
 		uart_putchar ('\n');
+		i += j;
 	}
 
 	uart_putchar ('\n');
