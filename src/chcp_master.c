@@ -25,6 +25,7 @@
 #include "chcp.h"
 #include "chcp_pin.h"
 #include "debug.h"
+#include "led.h"
 #include "chcp_credit.h"
 #include "chcp_master.h"
 
@@ -38,9 +39,8 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 			_delay_ms(1000);
 
 		chcp->auth = 0; /* Default to non-auth */
-		PORTC = 2; /* RED on */
+		led_set(RED, ON);
 		_delay_ms(500);
-
 		chcp_reset(chcp->atr);
 
 		if (*(chcp->atr) == 162) {
@@ -57,6 +57,7 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 				debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
 			} else {
 				debug_print_P(PSTR("\n New card! Press 7 to auth \n"), debug);
+				/* FIX ME */
 				loop_until_bit_is_clear(PINC, 7);
 
 				/* Do auth */
@@ -75,23 +76,19 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 			debug_print_P(PSTR("done!\n"), debug);
 			debug_memory(chcp->main_memory, debug);
 			/* green on */
-			PORTC = 1;
+			led_set(GREEN, ON);
 		}
 
 		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
 		while (chcp_present(chcp)) {
-			if (!chcp->auth) {
-				/* blink red */
-				PORTC = 3; /* off */
-				_delay_ms(500);
-				PORTC = 2; /* RED on */
-			}
+			if (!chcp->auth)
+				led_set(BLINK, RED);
 
 			_delay_ms(500);
 		}
 
-		PORTC = 3; /* leds off */
+		led_set(NONE, OFF);
 	}
 }
 

@@ -21,6 +21,7 @@ chcp_lib_obj = chcp_bbg.o chcp.o
 uart_obj = uart.o debug.o
 objects = $(uart_obj) chcp_counter.o
 objects += chcp_master.o chcp_slave.o chcp_credit.o
+objects += led.o
 
 GITRELEASE = "\"$(shell git describe --tags)\""
 

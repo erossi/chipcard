@@ -16,44 +16,45 @@
  */
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <avr/io.h>
-#include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-#include <avr/sleep.h>
-#include "chcp.h"
-#include "chcp_counter.h"
-#include "debug.h"
+#include <util/delay.h>
 #include "led.h"
-#include "chcp_master.h"
-#include "chcp_slave.h"
 
-extern int credit_bucks;
-
-int main(void)
+void led_set(const uint8_t led, const uint8_t status)
 {
-	struct chcp_t *chcp;
-	struct debug_t *debug;
+	switch (status) {
+		case ON:
+			led_set(NONE, OFF);
 
-	chcp = chcp_init();
-	debug = debug_init();
-	led_init();
-	counter_setup();
-	/*
-	set_sleep_mode(SLEEP_MODE_EXT_STANDBY);
-	*/
-	set_sleep_mode(SLEEP_MODE_IDLE);
+			if ((led == RED) || (led == BOTH))
+				 LED_PORT |= _BV(LED_RED);
 
-	sei();
+			if ((led == GREEN) || (led == BOTH))
+				LED_PORT |= _BV(LED_GREEN);
 
-	if (PINC & _BV(7))
-		slave(chcp, debug);
-	else
-		master(chcp, debug);
+			break;
+		case BLINK:
+			if (led == RED) {
+				LED_DELAY;
+				LED_PORT |= _BV(LED_RED);
+				LED_DELAY;
+			}
 
-	cli();
-	debug_free(debug);
-	chcp_free(chcp);
-	return(0);
+			if (led == GREEN) {
+				LED_DELAY;
+				LED_PORT |= _BV(LED_GREEN);
+				LED_DELAY;
+			}
+
+			break;
+		default:
+			LED_PORT &= ~(_BV(LED_RED) | _BV(LED_GREEN));
+	}
+}
+
+void led_init(void)
+{
+	LED_DDR |= (_BV(LED_RED) | _BV(LED_GREEN));
+	led_set(NONE, OFF);
 }
 

@@ -15,45 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-#include <avr/sleep.h>
-#include "chcp.h"
-#include "chcp_counter.h"
-#include "debug.h"
-#include "led.h"
-#include "chcp_master.h"
-#include "chcp_slave.h"
+/*! \file led.h
+  \brief Utility for handle leds.
+  */
 
-extern int credit_bucks;
+#ifndef CHCP_LED_H
+#define CHCP_LED_H
 
-int main(void)
-{
-	struct chcp_t *chcp;
-	struct debug_t *debug;
+#define LED_PORT PORTC
+#define LED_DDR DDRC
+#define LED_RED PC0
+#define LED_GREEN PC1
+#define LED_DELAY _delay_ms(200)
 
-	chcp = chcp_init();
-	debug = debug_init();
-	led_init();
-	counter_setup();
-	/*
-	set_sleep_mode(SLEEP_MODE_EXT_STANDBY);
-	*/
-	set_sleep_mode(SLEEP_MODE_IDLE);
+/*! Leds statuses */
+#define OFF 0
+#define ON 1
+#define BLINK 2
 
-	sei();
+/*! Leds types */
+#define NONE 0
+#define RED 1
+#define GREEN 2
+#define BOTH 3
 
-	if (PINC & _BV(7))
-		slave(chcp, debug);
-	else
-		master(chcp, debug);
+void led_set(const uint8_t led, const uint8_t status);
+void led_init(void);
 
-	cli();
-	debug_free(debug);
-	chcp_free(chcp);
-	return(0);
-}
+#endif
 
