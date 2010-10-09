@@ -34,6 +34,7 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 		debug_print_P(PSTR("Master mode\n"), debug);
 
 	for (;;) {
+		/* FIX ME!! SLEEP if power is missing */
 		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
@@ -42,50 +43,65 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 		_delay_ms(500);
 		chcp_reset(chcp->atr);
 
+		/* FIX ME - do a better check */
 		if (*(chcp->atr) == 162) {
+			/* I don't need to dump the entire memory */
 			chcp_dump_prt_memory(chcp->protected_memory);
 			chcp_dump_secmem(chcp->security_memory);
 			chcp_dump_memory(chcp->main_memory);
-			debug_atr(chcp->atr, debug);
-			debug_prt_memory(chcp->protected_memory, debug);
-			debug_secmem(chcp->security_memory, debug);
-			debug_memory(chcp->main_memory, debug);
+
+			if (debug->active) {
+				debug_atr(chcp->atr, debug);
+				debug_prt_memory(chcp->protected_memory, debug);
+				debug_secmem(chcp->security_memory, debug);
+				debug_memory(chcp->main_memory, debug);
+			}
 
 			if (credit_check(chcp)) {
-				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-				debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
+				if (debug->active) {
+					debug_print_P(PSTR("\n Valid card with credit\n"), debug);
+					debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
+				}
 			} else {
-				debug_print_P(PSTR("\n New card! Press 7 to auth \n"), debug);
-				/* FIX ME */
-				loop_until_bit_is_clear(PINC, 7);
+				if (debug->active) {
+					debug_print_P(PSTR("\n New card! Auth? (y/N): "), debug);
+					/*! Infinite loop until y is pressed */
+					while (!debug_wait_for_y(debug));
+				}
 
 				/* Do auth */
 				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-				debug_proc_counts(chcp->ck_proc, debug);
-				debug_secmem(chcp->security_memory, debug);
+
+				if (debug->active) {
+					debug_proc_counts(chcp->ck_proc, debug);
+					debug_secmem(chcp->security_memory, debug);
+				}
 			}
 		}
 
+		/*! authenticaded operations goes here */
 		if (chcp->auth) {
-			/* authenticaded operations */
-			debug_print_P(PSTR("\n Writing cards with credit \n"), debug);
+			if (debug->active)
+				debug_print_P(PSTR("\n Writing cards with credit \n"), debug);
+
 			memcpy(chcp->main_memory + 32, "CHARLIE", 7);
 			*(chcp->main_memory + 40) = 0x0a; /* 10 bucks */
 			chcp_write_memory(chcp, 32, 9);
-			debug_print_P(PSTR("done!\n"), debug);
-			debug_memory(chcp->main_memory, debug);
-			/* green on */
+
+			if (debug->active) {
+				debug_print_P(PSTR("done!\n"), debug);
+				debug_memory(chcp->main_memory, debug);
+			}
+
 			led_set(GREEN, ON);
 		}
 
-		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
+		if (debug->active)
+			debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
-		while (chcp_present(chcp)) {
+		while (chcp_present(chcp))
 			if (!chcp->auth)
 				led_set(RED, BLINK);
-
-			_delay_ms(500);
-		}
 
 		led_set(NONE, OFF);
 	}
