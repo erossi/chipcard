@@ -92,39 +92,37 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 		if (debug->active)
 			debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
-		/* fix this bug */
-		while (chcp_present(chcp)) {
-			if (!chcp->auth)
+		if (!chcp->auth)
+			while (chcp_present(chcp))
 				led_set(RED, BLINK);
+		else {
+			/* test the counter */
+			sleep_enable();
 
-			_delay_ms(500);
-		}
+			while (credit_bucks) {
+				/* start the counter */
+				counter_start();
+				/* sleep */
+				sleep_cpu();
+				/* awakening */
+				/* stop the counter */
+				counter_stop();
 
-		/* test the counter */
-		sleep_enable();
+				if (debug->active) {
+					debug_print_P(PSTR("Awake with bucks: "), debug);
+					debug->string = itoa(credit_bucks, debug->string, 10);
+					strcpy(debug->line, debug->string);
+					strcat(debug->line, "\n");
+					debug_print(debug);
+				}
 
-		while (credit_bucks) {
-			/* start the counter */
-			counter_start();
-			/* sleep */
-			sleep_cpu();
-			/* awakening */
-			/* stop the counter */
-			counter_stop();
-
-			if (debug->active) {
-				debug_print_P(PSTR("Awake with bucks: "), debug);
-				debug->string = itoa(credit_bucks, debug->string, 10);
-				strcpy(debug->line, debug->string);
-				strcat(debug->line, "\n");
-				debug_print(debug);
+				/* FIX ME: Why ? */
+				_delay_ms(200);
 			}
 
-			/* FIX ME: Why ? */
-			_delay_ms(200);
+			sleep_disable();
 		}
 
-		sleep_disable();
 		led_set(NONE, OFF);
 	}
 }
