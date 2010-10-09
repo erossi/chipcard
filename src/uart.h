@@ -5,6 +5,7 @@
 #define UART_BAUD 9600
 
 void uart_init(void);
+char uart_getchar(void);
 void uart_putchar(const char c);
 void uart_printstr(const char *s);
 
