@@ -35,7 +35,7 @@ uint8_t credit_check(struct chcp_t *chcp)
 		return(0);
 }
 
-uint8_t credit_suck(struct chcp_t *chcp)
+unsigned int credit_suck(struct chcp_t *chcp)
 {
 	uint8_t bucks;
 
@@ -47,6 +47,7 @@ uint8_t credit_suck(struct chcp_t *chcp)
 		chcp_write_memory(chcp, 40, 1);
 	}
 
-	return(bucks);
+	/*! Buck should not be > 145 */
+	return(bucks * CREDIT_MULTIPLIER);
 }
 

@@ -29,6 +29,15 @@
 #include "chcp_counter.h"
 #include "chcp_slave.h"
 
+static uint8_t check_sle_atr(struct chcp_t *chcp) {
+	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
+
+	if (memcmp(chcp->atr, &atr, 4))
+		return(0);
+	else
+		return(1);
+}
+
 void slave(struct chcp_t *chcp, struct debug_t *debug)
 {
 	debug_print_P(PSTR("Slave mode\n"), debug);
@@ -45,8 +54,8 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 		_delay_ms(500);
 		chcp_reset(chcp->atr);
 
-		/* FIX ME - do a better check */
-		if (*(chcp->atr) == 162) {
+		/*! check the correct SLE4442 atr */
+		if (check_sle_atr(chcp)) {
 			/* I don't need to dump the entire memory */
 			chcp_dump_prt_memory(chcp->protected_memory);
 			chcp_dump_secmem(chcp->security_memory);
@@ -60,8 +69,13 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 			if (credit_check(chcp)) {
 				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
 				debug_print_P(PSTR("\n Auth? (y/N): "), debug);
-				/*! Infinite loop until y is pressed */
-				while (!debug_wait_for_y(debug));
+				/*!
+				 Infinite loop until y is pressed.
+				 Have to check if debug is active or
+				 you'll lock the code.
+				 */
+				if (debug->active)
+					while (!debug_wait_for_y(debug));
 
 				/* Do auth */
 				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);

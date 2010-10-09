@@ -18,8 +18,16 @@
 #ifndef CHCP_CREDIT_H
 #define CHCP_CREDIT_H
 
+/*!
+This is the multiplier of the credit stored in the card.
+for example 2 bucks in the card become 900 in the memory.
+900 cycle each of 8 sec is a total of:
+900*8s = 7200s (2h).
+ */
+#define CREDIT_MULTIPLIER 450
+
 uint8_t credit_check(struct chcp_t *chcp);
-uint8_t credit_suck(struct chcp_t *chcp);
+unsigned int credit_suck(struct chcp_t *chcp);
 
 #endif
 
