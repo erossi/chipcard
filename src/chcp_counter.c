@@ -33,28 +33,28 @@
   IRQ wakes up on the timer oveflow and decrement the
   remaining credit.
  */
-ISR(TIMER1_OVF_vect)
+ISR(TIMER2_OVF_vect)
 {
 	credit_bucks--;
 }
 
 void counter_setup(void)
 {
-	TCCR1A = 0;
-	TCCR1B = 0;
+	ASSR = _BV(AS2);
+	TCCR2 = 0;
 
-	/*! enable interrupt on timer 1 overflow */
-	TIMSK = _BV(TOIE1);
+	/*! enable interrupt on timer 2 overflow */
+	TIMSK = _BV(TOIE2);
 }
 
 void counter_start(void)
 {
 	/*! counter prescaler 1024 */
-	TCCR1B = _BV(CS12) | _BV(CS10);
+	TCCR2 = _BV(CS22) | _BV(CS21) | _BV(CS20);
 }
 
 void counter_stop(void)
 {
-	TCCR1B = 0;
+	TCCR2 = 0;
 }
 
