@@ -31,16 +31,17 @@
 
 void slave(struct chcp_t *chcp, struct debug_t *debug)
 {
-	if (debug->active)
-		debug_print_P(PSTR("Slave mode\n"), debug);
+	debug_print_P(PSTR("Slave mode\n"), debug);
 
 	for (;;) {
 		/* FIX ME!! SLEEP if power is missing */
 		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
-		chcp->auth = 0; /* Default to non-auth */
+		/*! Default to non-auth */
+		chcp->auth = 0;
 		led_set(RED, ON);
+		/*! Wait between card insertion and begin */
 		_delay_ms(500);
 		chcp_reset(chcp->atr);
 
@@ -51,46 +52,33 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 			chcp_dump_secmem(chcp->security_memory);
 			chcp_dump_memory(chcp->main_memory);
 
-			if (debug->active) {
-				debug_atr(chcp->atr, debug);
-				debug_prt_memory(chcp->protected_memory, debug);
-				debug_secmem(chcp->security_memory, debug);
-				debug_memory(chcp->main_memory, debug);
-			}
+			debug_atr(chcp->atr, debug);
+			debug_prt_memory(chcp->protected_memory, debug);
+			debug_secmem(chcp->security_memory, debug);
+			debug_memory(chcp->main_memory, debug);
 
 			if (credit_check(chcp)) {
-				if (debug->active) {
-					debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-					debug_print_P(PSTR("\n Auth? (y/N): "), debug);
-					/*! Infinite loop until y is pressed */
-					while (!debug_wait_for_y(debug));
-				}
+				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
+				debug_print_P(PSTR("\n Auth? (y/N): "), debug);
+				/*! Infinite loop until y is pressed */
+				while (!debug_wait_for_y(debug));
 
 				/* Do auth */
 				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-
-				if (debug->active) {
-					debug_proc_counts(chcp->ck_proc, debug);
-					debug_secmem(chcp->security_memory, debug);
-				}
-			} else {
-				if (debug->active)
-					debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
-			}
+				debug_proc_counts(chcp->ck_proc, debug);
+				debug_secmem(chcp->security_memory, debug);
+			} else
+				debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
 		}
 
 		/*! authenticaded operations goes here */
 		if (chcp->auth) {
 			credit_bucks = credit_suck(chcp);
-
-			if (debug->active)
-				debug_memory(chcp->main_memory, debug);
-
+			debug_memory(chcp->main_memory, debug);
 			led_set(GREEN, ON);
 		}
 
-		if (debug->active)
-			debug_print_P(PSTR("Now you can remove the card!\n"), debug);
+		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
 		if (!chcp->auth)
 			while (chcp_present(chcp))
@@ -108,16 +96,20 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 				/* stop the counter */
 				counter_stop();
 
+				debug_print_P(PSTR("Awake with bucks: "), debug);
+
+				/*! Protect from unallocated memory */
 				if (debug->active) {
-					debug_print_P(PSTR("Awake with bucks: "), debug);
 					debug->string = itoa(credit_bucks, debug->string, 10);
 					strcpy(debug->line, debug->string);
 					strcat(debug->line, "\n");
 					debug_print(debug);
 				}
 
-				/* FIX ME: Why ? */
-				_delay_ms(200);
+				/*! Don't go to sleep until
+				 uart chars has been sent */
+				if (debug->active)
+					_delay_ms(200);
 			}
 
 			sleep_disable();
