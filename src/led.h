@@ -22,10 +22,10 @@
 #ifndef CHCP_LED_H
 #define CHCP_LED_H
 
-#define LED_PORT PORTC
-#define LED_DDR DDRC
-#define LED_RED PC0
-#define LED_GREEN PC1
+#define LED_PORT PORTB
+#define LED_DDR DDRB
+#define LED_RED PB2
+#define LED_GREEN PB3
 #define LED_DELAY _delay_ms(200)
 
 /*! Leds statuses */
