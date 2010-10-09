@@ -104,7 +104,7 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 				counter_start();
 				/* sleep */
 				sleep_cpu();
-				/* awakening */
+				/*! awakening via IRQ */
 				/* stop the counter */
 				counter_stop();
 

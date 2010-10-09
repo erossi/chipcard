@@ -37,10 +37,10 @@ int main(void)
 	debug = debug_init();
 	led_init();
 	counter_setup();
-	/*
 	set_sleep_mode(SLEEP_MODE_EXT_STANDBY);
-	*/
-	set_sleep_mode(SLEEP_MODE_IDLE);
+	/*
+	   set_sleep_mode(SLEEP_MODE_IDLE);
+	   */
 
 	sei();
 

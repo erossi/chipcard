@@ -51,10 +51,12 @@ void counter_start(void)
 {
 	/*! counter prescaler 1024 */
 	TCCR2 = _BV(CS22) | _BV(CS21) | _BV(CS20);
+	loop_until_bit_is_clear(ASSR, TCR2UB);
 }
 
 void counter_stop(void)
 {
 	TCCR2 = 0;
+	loop_until_bit_is_clear(ASSR, TCR2UB);
 }
 
