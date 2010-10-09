@@ -18,6 +18,13 @@
 #ifndef CHCP_MASTER_H
 #define CHCP_MASTER_H
 
+/*!
+  The number of hours to recharge. techically it has to be
+  a byte which is < 256, but it can't be > 145, see
+  credit/counter functions.
+ */
+#define RECHARGE_BUCKS 24
+
 void master(struct chcp_t *chcp, struct debug_t *debug);
 
 #endif

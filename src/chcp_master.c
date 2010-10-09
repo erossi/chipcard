@@ -28,10 +28,29 @@
 #include "chcp_credit.h"
 #include "chcp_master.h"
 
+static uint8_t check_sle_atr(struct chcp_t *chcp) {
+	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
+
+	if (memcmp(chcp->atr, &atr, 4))
+		return(0);
+	else
+		return(1);
+}
+
+static void recharge(struct chcp_t *chcp, struct debug_t *debug)
+{
+	debug_print_P(PSTR("\n Writing cards with credit \n"), debug);
+	memcpy(chcp->main_memory + 32, "CHARLIE", 7);
+	*(chcp->main_memory + 40) = RECHARGE_BUCKS;
+	chcp_write_memory(chcp, 32, 9);
+	led_set(GREEN, ON);
+	debug_print_P(PSTR("done!\n"), debug);
+	debug_memory(chcp->main_memory, debug);
+}
+
 void master(struct chcp_t *chcp, struct debug_t *debug)
 {
-	if (debug->active)
-		debug_print_P(PSTR("Master mode\n"), debug);
+	debug_print_P(PSTR("Master mode\n"), debug);
 
 	for (;;) {
 		/* FIX ME!! SLEEP if power is missing */
@@ -43,62 +62,40 @@ void master(struct chcp_t *chcp, struct debug_t *debug)
 		_delay_ms(500);
 		chcp_reset(chcp->atr);
 
-		/* FIX ME - do a better check */
-		if (*(chcp->atr) == 162) {
+		/*! check the correct SLE4442 atr */
+		if (check_sle_atr(chcp)) {
 			/* I don't need to dump the entire memory */
 			chcp_dump_prt_memory(chcp->protected_memory);
 			chcp_dump_secmem(chcp->security_memory);
 			chcp_dump_memory(chcp->main_memory);
-
-			if (debug->active) {
-				debug_atr(chcp->atr, debug);
-				debug_prt_memory(chcp->protected_memory, debug);
-				debug_secmem(chcp->security_memory, debug);
-				debug_memory(chcp->main_memory, debug);
-			}
+			debug_atr(chcp->atr, debug);
+			debug_prt_memory(chcp->protected_memory, debug);
+			debug_secmem(chcp->security_memory, debug);
+			debug_memory(chcp->main_memory, debug);
 
 			if (credit_check(chcp)) {
-				if (debug->active) {
-					debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-					debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
-				}
+				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
+				debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
 			} else {
-				if (debug->active) {
-					debug_print_P(PSTR("\n New card! Auth? (y/N): "), debug);
-					/*! Infinite loop until y is pressed */
-					while (!debug_wait_for_y(debug));
-				}
+				debug_print_P(PSTR("\n New card! Auth? (y/N): "), debug);
+				/*! Infinite loop until y is pressed */
+				while (!debug_wait_for_y(debug));
 
 				/* Do auth */
 				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-
-				if (debug->active) {
-					debug_proc_counts(chcp->ck_proc, debug);
-					debug_secmem(chcp->security_memory, debug);
-				}
+				debug_proc_counts(chcp->ck_proc, debug);
+				debug_secmem(chcp->security_memory, debug);
 			}
 		}
 
 		/*! authenticaded operations goes here */
 		if (chcp->auth) {
-			if (debug->active)
-				debug_print_P(PSTR("\n Writing cards with credit \n"), debug);
-
-			memcpy(chcp->main_memory + 32, "CHARLIE", 7);
-			*(chcp->main_memory + 40) = 0x0a; /* 10 bucks */
-			chcp_write_memory(chcp, 32, 9);
-
-			if (debug->active) {
-				debug_print_P(PSTR("done!\n"), debug);
-				debug_memory(chcp->main_memory, debug);
-			}
-
-			led_set(GREEN, ON);
+			recharge(chcp, debug);
 		}
 
-		if (debug->active)
-			debug_print_P(PSTR("Now you can remove the card!\n"), debug);
+		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
+		/*! loop until the card is inserted */
 		while (chcp_present(chcp))
 			if (!chcp->auth)
 				led_set(RED, BLINK);
