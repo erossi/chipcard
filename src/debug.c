@@ -27,13 +27,16 @@
 
 void debug_print_P(PGM_P string, struct debug_t *debug)
 {
-	strcpy_P(debug->line, string);
-	uart_printstr(debug->line);
+	if (debug->active) {
+		strcpy_P(debug->line, string);
+		uart_printstr(debug->line);
+	}
 }
 
 void debug_print(struct debug_t *debug)
 {
-	uart_printstr(debug->line);
+	if (debug->active)
+		uart_printstr(debug->line);
 }
 
 static void hello(struct debug_t *debug)
@@ -83,32 +86,42 @@ static void dbg_mem(uint8_t *mm, const int max, struct debug_t *debug)
 
 void debug_atr(uint8_t *atr, struct debug_t *debug)
 {
-	debug_print_P(PSTR("-> ATR Bytes ----\n"), debug);
-	dbg_mem(atr, 4, debug);
+	if (debug->active) {
+		debug_print_P(PSTR("-> ATR Bytes ----\n"), debug);
+		dbg_mem(atr, 4, debug);
+	}
 }
 
 void debug_memory(uint8_t *mm, struct debug_t *debug)
 {
-	debug_print_P(PSTR("-> Main Memory Bytes ----\n"), debug);
-	dbg_mem(mm, 256, debug);
+	if (debug->active) {
+		debug_print_P(PSTR("-> Main Memory Bytes ----\n"), debug);
+		dbg_mem(mm, 256, debug);
+	}
 }
 
 void debug_prt_memory(uint8_t *pm, struct debug_t *debug)
 {
-	debug_print_P(PSTR("-> Protected Memory Bytes ----\n"), debug);
-	dbg_mem(pm, 4, debug);
+	if (debug->active) {
+		debug_print_P(PSTR("-> Protected Memory Bytes ----\n"), debug);
+		dbg_mem(pm, 4, debug);
+	}
 }
 
 void debug_secmem(uint8_t *sm, struct debug_t *debug)
 {
-	debug_print_P(PSTR("-> Security Memory Bytes ----\n"), debug);
-	dbg_mem(sm, 4, debug);
+	if (debug->active) {
+		debug_print_P(PSTR("-> Security Memory Bytes ----\n"), debug);
+		dbg_mem(sm, 4, debug);
+	}
 }
 
 void debug_proc_counts(uint8_t *pc, struct debug_t *debug)
 {
-	debug_print_P(PSTR("-> Auth Proccessing times ----\n"), debug);
-	dbg_mem(pc, 5, debug);
+	if (debug->active) {
+		debug_print_P(PSTR("-> Auth Proccessing times ----\n"), debug);
+		dbg_mem(pc, 5, debug);
+	}
 }
 
 uint8_t debug_wait_for_y(struct debug_t *debug)
@@ -116,16 +129,18 @@ uint8_t debug_wait_for_y(struct debug_t *debug)
 	uint8_t i;
 	char c;
 
-	for (i = 0; i < SEC_FOR_Y; i++) {
-		c = uart_getchar();
+	if (debug->active) {
+		for (i = 0; i < SEC_FOR_Y; i++) {
+			c = uart_getchar();
 
-		/*! "Y" is 89 and "y" is 121 */
-		if ((c == 89) || (c == 121)) {
-			debug_print_P(PSTR("\n"), debug);
-			return(1); /*! Exit the cicle in a bad way */
-		} else {
-			_delay_ms(1000);
-			debug_print_P(PSTR("."), debug);
+			/*! "Y" is 89 and "y" is 121 */
+			if ((c == 89) || (c == 121)) {
+				debug_print_P(PSTR("\n"), debug);
+				return(1); /*! Exit the cicle in a bad way */
+			} else {
+				_delay_ms(1000);
+				debug_print_P(PSTR("."), debug);
+			}
 		}
 	}
 
@@ -140,13 +155,12 @@ struct debug_t *debug_init(void)
 	debug = malloc(sizeof(struct debug_t));
 	debug->line = malloc(MAX_LINE_LENGHT);
 	debug->string = malloc(MAX_STRING_LENGHT);
-	debug->active = 0;
+	debug->active = 1;
 	hello(debug);
 	debug_print_P(PSTR("\nActivate debug? (y/N): "), debug);
 
-	if (debug_wait_for_y(debug))
-		debug->active = 1;
-	else {
+	if (!debug_wait_for_y(debug)) {
+		debug->active = 0;
 		free(debug->line);
 		free(debug->string);
 	}
