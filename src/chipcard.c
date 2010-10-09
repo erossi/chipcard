@@ -26,7 +26,7 @@
 #include "chcp_slave.h"
 #include "chcp_counter.h"
 
-extern int credit_bucks;
+extern unsigned int credit_bucks;
 
 int main(void)
 {
@@ -38,9 +38,6 @@ int main(void)
 	led_init();
 	counter_setup();
 	set_sleep_mode(SLEEP_MODE_EXT_STANDBY);
-	/*
-	   set_sleep_mode(SLEEP_MODE_IDLE);
-	   */
 
 	sei();
 

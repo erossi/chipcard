@@ -24,8 +24,17 @@
 #ifndef CHCP_COUNTER_H
 #define CHCP_COUNTER_H
 
-/*! Global used in interrupt */
-int credit_bucks;
+/*!
+  Global used in interrupt.
+  This rapprensent the numner of cycle the counter has
+  todo before stop the TV.
+  Since the credit is in number of hours, and a cycle is 8 sec long,
+  this number can be at maximum:
+  255h * 450 = 114750 which is far beyond max int!
+  thus the maximum number of hour loadable in the card can be (rounded):
+  65535/450 is 145h about 6 days.
+ */
+unsigned int credit_bucks;
 
 void counter_setup(void);
 void counter_start(void);
