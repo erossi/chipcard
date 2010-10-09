@@ -15,18 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
 #include <stdlib.h>
-#include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include "chcp.h"
-#include "chcp_counter.h"
 #include "debug.h"
 #include "led.h"
 #include "chcp_master.h"
 #include "chcp_slave.h"
+#include "chcp_counter.h"
 
 extern int credit_bucks;
 
@@ -46,10 +44,14 @@ int main(void)
 
 	sei();
 
-	if (PINC & _BV(7))
-		slave(chcp, debug);
-	else
+	if (debug->active)
+		debug_print_P(PSTR("\nMaster mode? (y/N): "), debug);
+
+	/*! by default go into slave mode */
+	if (debug->active && debug_wait_for_y(debug))
 		master(chcp, debug);
+	else
+		slave(chcp, debug);
 
 	cli();
 	debug_free(debug);
