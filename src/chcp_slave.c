@@ -35,6 +35,7 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 		debug_print_P(PSTR("Slave mode\n"), debug);
 
 	for (;;) {
+		/* FIX ME!! SLEEP if power is missing */
 		while (!chcp_present(chcp))
 			_delay_ms(1000);
 
@@ -43,40 +44,55 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 		_delay_ms(500);
 		chcp_reset(chcp->atr);
 
+		/* FIX ME - do a better check */
 		if (*(chcp->atr) == 162) {
+			/* I don't need to dump the entire memory */
 			chcp_dump_prt_memory(chcp->protected_memory);
 			chcp_dump_secmem(chcp->security_memory);
 			chcp_dump_memory(chcp->main_memory);
-			debug_atr(chcp->atr, debug);
-			debug_prt_memory(chcp->protected_memory, debug);
-			debug_secmem(chcp->security_memory, debug);
-			debug_memory(chcp->main_memory, debug);
+
+			if (debug->active) {
+				debug_atr(chcp->atr, debug);
+				debug_prt_memory(chcp->protected_memory, debug);
+				debug_secmem(chcp->security_memory, debug);
+				debug_memory(chcp->main_memory, debug);
+			}
 
 			if (credit_check(chcp)) {
-				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-				debug_print_P(PSTR("\n Press 7 to auth\n"), debug);
-				/* FIX ME */
-				loop_until_bit_is_clear(PINC, 7);
+				if (debug->active) {
+					debug_print_P(PSTR("\n Valid card with credit\n"), debug);
+					debug_print_P(PSTR("\n Auth? (y/N): "), debug);
+					/*! Infinite loop until y is pressed */
+					while (!debug_wait_for_y(debug));
+				}
 
 				/* Do auth */
 				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-				debug_proc_counts(chcp->ck_proc, debug);
-				debug_secmem(chcp->security_memory, debug);
+
+				if (debug->active) {
+					debug_proc_counts(chcp->ck_proc, debug);
+					debug_secmem(chcp->security_memory, debug);
+				}
 			} else {
-				debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
+				if (debug->active)
+					debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
 			}
 		}
 
+		/*! authenticaded operations goes here */
 		if (chcp->auth) {
-			/* authenticaded operations */
 			credit_bucks = credit_suck(chcp);
-			debug_memory(chcp->main_memory, debug);
-			/* green on */
+
+			if (debug->active)
+				debug_memory(chcp->main_memory, debug);
+
 			led_set(GREEN, ON);
 		}
 
-		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
+		if (debug->active)
+			debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
+		/* fix this bug */
 		while (chcp_present(chcp)) {
 			if (!chcp->auth)
 				led_set(RED, BLINK);
@@ -95,11 +111,16 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 			/* awakening */
 			/* stop the counter */
 			counter_stop();
-			debug_print_P(PSTR("Awake with bucks: "), debug);
-			debug->string = itoa(credit_bucks, debug->string, 10);
-			strcpy(debug->line, debug->string);
-			strcat(debug->line, "\n");
-			debug_print(debug);
+
+			if (debug->active) {
+				debug_print_P(PSTR("Awake with bucks: "), debug);
+				debug->string = itoa(credit_bucks, debug->string, 10);
+				strcpy(debug->line, debug->string);
+				strcat(debug->line, "\n");
+				debug_print(debug);
+			}
+
+			/* FIX ME: Why ? */
 			_delay_ms(200);
 		}
 
