@@ -34,6 +34,7 @@ conversions have to be made from int to string etc. */
 #define MAX_STRING_LENGHT 20
 
 #define PRINT_VALUE_X_LINE 16
+#define SEC_FOR_Y 5
 
 /*! The main debug structure, it has to be allocated,
   eventually, if debug is not active, you can avoid the
@@ -52,6 +53,7 @@ void debug_memory(uint8_t *mm, struct debug_t *debug);
 void debug_prt_memory(uint8_t *pm, struct debug_t *debug);
 void debug_secmem(uint8_t *sm, struct debug_t *debug);
 void debug_proc_counts(uint8_t *pc, struct debug_t *debug);
+uint8_t debug_wait_for_y(struct debug_t *debug);
 struct debug_t *debug_init(void);
 void debug_free(struct debug_t *debug);
 

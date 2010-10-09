@@ -49,11 +49,6 @@ static void hello(struct debug_t *debug)
         debug_print_P(PSTR("\n\n"), debug);
 }
 
-static uint8_t ask_activate(void)
-{
-	return(1);
-}
-
 static void dbg_mem(uint8_t *mm, const int max, struct debug_t *debug)
 {
 	int i=0;
@@ -116,18 +111,44 @@ void debug_proc_counts(uint8_t *pc, struct debug_t *debug)
 	dbg_mem(pc, 5, debug);
 }
 
+uint8_t debug_wait_for_y(struct debug_t *debug)
+{
+	uint8_t i;
+	char c;
+
+	for (i = 0; i < SEC_FOR_Y; i++) {
+		c = uart_getchar();
+
+		/*! "Y" is 89 and "y" is 121 */
+		if ((c == 89) || (c == 121)) {
+			debug_print_P(PSTR("\n"), debug);
+			return(1); /*! Exit the cicle in a bad way */
+		} else {
+			_delay_ms(1000);
+			debug_print_P(PSTR("."), debug);
+		}
+	}
+
+	return(0);
+}
+
 struct debug_t *debug_init(void)
 {
 	struct debug_t *debug;
 
 	uart_init();
 	debug = malloc(sizeof(struct debug_t));
-	debug->active = ask_activate();
+	debug->line = malloc(MAX_LINE_LENGHT);
+	debug->string = malloc(MAX_STRING_LENGHT);
+	debug->active = 0;
+	hello(debug);
+	debug_print_P(PSTR("\nActivate debug? (y/N): "), debug);
 
-	if (debug->active) {
-		debug->line = malloc(MAX_LINE_LENGHT);
-		debug->string = malloc(MAX_STRING_LENGHT);
-		hello(debug);
+	if (debug_wait_for_y(debug))
+		debug->active = 1;
+	else {
+		free(debug->line);
+		free(debug->string);
 	}
 
 	return(debug);
