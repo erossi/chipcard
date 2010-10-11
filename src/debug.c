@@ -112,7 +112,11 @@ void debug_secmem(uint8_t *sm, struct debug_t *debug)
 {
 	if (debug->active) {
 		debug_print_P(PSTR("-> Security Memory Bytes ----\n"), debug);
+#ifdef DEBUG_SECRET_PIN
 		dbg_mem(sm, 4, debug);
+#else
+		dbg_mem(sm, 1, debug);
+#endif
 	}
 }
 
