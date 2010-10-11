@@ -154,8 +154,20 @@ void chcp_write_memory(struct chcp_t *chcp, const uint8_t base, const uint8_t le
 	if (chcp->auth) {
 		for (i=0; i<len; i++) {
 			addr = base + i;
-		send_cmd(CHCP_CMD_UPDATE_MEMORY, addr, *(chcp->main_memory + addr));
-		*(chcp->ck_proc) = processing();
+			send_cmd(CHCP_CMD_UPDATE_MEMORY, addr, *(chcp->main_memory + addr));
+			*(chcp->ck_proc) = processing();
+		}
+	}
+}
+
+void chcp_write_secmem(struct chcp_t *chcp)
+{
+	uint8_t i;
+
+	if (chcp->auth) {
+		for (i=0; i<4; i++) {
+			send_cmd(CHCP_CMD_UPDATE_SECMEM, i, *(chcp->security_memory + i));
+			*(chcp->ck_proc + i) = processing();
 		}
 	}
 }

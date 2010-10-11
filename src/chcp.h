@@ -94,6 +94,7 @@ void chcp_dump_prt_memory(uint8_t *mm);
 void chcp_dump_secmem(uint8_t *mm);
 void chcp_auth(struct chcp_t *chcp, const uint8_t pin1, const uint8_t pin2, const uint8_t pin3);
 void chcp_write_memory(struct chcp_t *chcp, const uint8_t addr, const uint8_t len);
+void chcp_write_secmem(struct chcp_t *chcp);
 
 #endif
 
