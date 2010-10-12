@@ -21,7 +21,6 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include "chcp.h"
 #include "uart.h"
 #include "debug.h"
 

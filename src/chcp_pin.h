@@ -23,5 +23,13 @@
 #define CHCP_PIN2 0xFF
 #define CHCP_PIN3 0xFF
 
+/*! The default pin when the card is brand new */
+#define CHCP_DEF_PIN1 0xff
+#define CHCP_DEF_PIN2 0xff
+#define CHCP_DEF_PIN3 0xff
+
+/*! String written to the card to initialize 7 char max. */
+#define CHCP_SLE_CODE "CHARLYE"
+
 #endif
 

@@ -1,9 +1,10 @@
 MCU = atmega16
-INC = -I/usr/avr/include/
+PWD = $(shell pwd)
+INC = -I/usr/avr/include/ -I$(PWD)/../include
 OPTLEV = 2
 FCPU = 4000000UL
 CFLAGS = $(INC) -Wall -Wstrict-prototypes -pedantic -mmcu=$(MCU) -O$(OPTLEV) -D F_CPU=$(FCPU)
-LFLAGS = -L$(shell pwd) -lm -lchcp
+LFLAGS = -L$(PWD)/../lib -lsle4442
 
 AR = avr-ar
 CC = avr-gcc
@@ -17,7 +18,6 @@ SIZE = avr-size
 DUDE = avrdude -c $(DUDEDEV) -p $(MCU) -P $(DUDEPORT) -e -U flash:w:$(PRGNAME).hex
 REMOVE = rm -f
 
-chcp_lib_obj = chcp_bbg.o chcp.o
 uart_obj = uart.o debug.o
 objects = $(uart_obj) chcp_counter.o
 objects += chcp_master.o chcp_slave.o chcp_credit.o
@@ -36,17 +36,9 @@ all: $(objects)
 debug.o:
 	$(CC) $(CFLAGS) -D GITREL=$(GITRELEASE) -c debug.c
 
-lib: $(chcp_lib_obj)
-	$(AR) rcs libchcp.a $(chcp_lib_obj)
-
 program:
 	$(DUDE)
 
-libclean:
-	$(REMOVE) $(chcp_lib_obj) libchcp.a
-
 clean:
 	$(REMOVE) $(PRGNAME).elf $(PRGNAME).hex $(objects)
-
-allclean: clean libclean
 

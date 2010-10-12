@@ -21,7 +21,7 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
-#include "chcp.h"
+#include "sle.h"
 #include "chcp_pin.h"
 #include "debug.h"
 #include "led.h"
@@ -29,44 +29,45 @@
 #include "chcp_counter.h"
 #include "chcp_slave.h"
 
-static uint8_t check_sle_atr(struct chcp_t *chcp) {
+static uint8_t check_sle_atr(struct sle_t *sle) {
 	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
 
-	if (memcmp(chcp->atr, &atr, 4))
+	if (memcmp(sle->atr, &atr, 4))
 		return(0);
 	else
 		return(1);
 }
 
-void slave(struct chcp_t *chcp, struct debug_t *debug)
+void slave(struct sle_t *sle, struct debug_t *debug)
 {
 	debug_print_P(PSTR("Slave mode\n"), debug);
 
 	for (;;) {
 		/* FIX ME!! SLEEP if power is missing */
-		while (!chcp_present(chcp))
+		while (!sle_present(sle))
 			_delay_ms(1000);
 
 		/*! Default to non-auth */
-		chcp->auth = 0;
+		sle->auth = 0;
 		led_set(RED, ON);
 		/*! Wait between card insertion and begin */
 		_delay_ms(500);
-		chcp_reset(chcp->atr);
+		sle_reset(sle->atr);
 
 		/*! check the correct SLE4442 atr */
-		if (check_sle_atr(chcp)) {
+		if (check_sle_atr(sle)) {
 			/* I don't need to dump the entire memory */
-			chcp_dump_prt_memory(chcp->protected_memory);
-			chcp_dump_secmem(chcp->security_memory);
-			chcp_dump_memory(chcp->main_memory);
+			sle_dump_prt_memory(sle->protected_memory);
+			sle_dump_secmem(sle->security_memory);
+			sle_dump_memory(sle->main_memory);
 
-			debug_atr(chcp->atr, debug);
-			debug_prt_memory(chcp->protected_memory, debug);
-			debug_secmem(chcp->security_memory, debug);
-			debug_memory(chcp->main_memory, debug);
+			debug_atr(sle->atr, debug);
+			debug_prt_memory(sle->protected_memory, debug);
+			debug_secmem(sle->security_memory, debug);
+			debug_memory(sle->main_memory, debug);
 
-			if (credit_check(chcp)) {
+			/*! The card is valid and have credits */
+			if (credit_check(sle)) {
 				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
 				debug_print_P(PSTR("\n Auth? (y/N): "), debug);
 				/*!
@@ -78,24 +79,24 @@ void slave(struct chcp_t *chcp, struct debug_t *debug)
 					while (!debug_wait_for_y(debug));
 
 				/* Do auth */
-				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-				debug_proc_counts(chcp->ck_proc, debug);
-				debug_secmem(chcp->security_memory, debug);
+				sle_auth(sle, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
+				debug_proc_counts(sle->ck_proc, debug);
+				debug_secmem(sle->security_memory, debug);
 			} else
 				debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
 		}
 
 		/*! authenticaded operations goes here */
-		if (chcp->auth) {
-			credit_bucks = credit_suck(chcp);
-			debug_memory(chcp->main_memory, debug);
+		if (sle->auth) {
+			credit_bucks = credit_suck(sle);
+			debug_memory(sle->main_memory, debug);
 			led_set(GREEN, ON);
 		}
 
 		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
-		if (!chcp->auth)
-			while (chcp_present(chcp))
+		if (!sle->auth)
+			while (sle_present(sle))
 				led_set(RED, BLINK);
 		else {
 			/* test the counter */

@@ -18,6 +18,6 @@
 #ifndef CHCP_SLAVE_H
 #define CHCP_SLAVE_H
 
-void slave(struct chcp_t *chcp, struct debug_t *debug);
+void slave(struct sle_t *sle, struct debug_t *debug);
 
 #endif

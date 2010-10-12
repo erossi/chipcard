@@ -26,8 +26,9 @@ for example 2 bucks in the card become 900 in the memory.
  */
 #define CREDIT_MULTIPLIER 450
 
-uint8_t credit_check(struct chcp_t *chcp);
-unsigned int credit_suck(struct chcp_t *chcp);
+uint8_t credit_card_new(struct sle_t *sle);
+uint8_t credit_check(struct sle_t *sle);
+unsigned int credit_suck(struct sle_t *sle);
 
 #endif
 

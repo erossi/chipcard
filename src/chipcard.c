@@ -19,7 +19,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
-#include "chcp.h"
+#include "sle.h"
 #include "debug.h"
 #include "led.h"
 #include "chcp_master.h"
@@ -30,10 +30,10 @@ extern unsigned int credit_bucks;
 
 int main(void)
 {
-	struct chcp_t *chcp;
+	struct sle_t *sle;
 	struct debug_t *debug;
 
-	chcp = chcp_init();
+	sle = sle_init();
 	debug = debug_init();
 	led_init();
 	counter_setup();
@@ -46,13 +46,13 @@ int main(void)
 
 	/*! by default go into slave mode */
 	if (debug->active && debug_wait_for_y(debug))
-		master(chcp, debug);
+		master(sle, debug);
 	else
-		slave(chcp, debug);
+		slave(sle, debug);
 
 	cli();
 	debug_free(debug);
-	chcp_free(chcp);
+	sle_free(sle);
 	return(0);
 }
 

@@ -18,33 +18,37 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "chcp.h"
+#include "sle.h"
+#include "chcp_pin.h"
 #include "chcp_credit.h"
 
-uint8_t credit_check(struct chcp_t *chcp)
+uint8_t credit_card_new(struct sle_t *sle)
 {
-	int result;
+	return(memcmp(sle->main_memory + 32, CHCP_SLE_CODE, 7));
+}
+
+uint8_t credit_check(struct sle_t *sle)
+{
 	uint8_t bucks;
 
-	result = memcmp(chcp->main_memory + 32, "CHARLIE", 7);
-	bucks = *(chcp->main_memory + 40);
+	bucks = *(sle->main_memory + 40);
 
-	if (bucks && !result)
+	if (bucks && !credit_card_new(sle))
 		return(1);
 	else
 		return(0);
 }
 
-unsigned int credit_suck(struct chcp_t *chcp)
+unsigned int credit_suck(struct sle_t *sle)
 {
 	uint8_t bucks;
 
-	bucks = *(chcp->main_memory + 40);
+	bucks = *(sle->main_memory + 40);
 
 	/* clear bucks in the card */
 	if (bucks) {
-		*(chcp->main_memory + 40) = 0;
-		chcp_write_memory(chcp, 40, 1);
+		*(sle->main_memory + 40) = 0;
+		sle_write_memory(sle, 40, 1);
 	}
 
 	/*! Buck should not be > 145 */

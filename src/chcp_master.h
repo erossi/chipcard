@@ -25,7 +25,7 @@
  */
 #define RECHARGE_BUCKS 24
 
-void master(struct chcp_t *chcp, struct debug_t *debug);
+void master(struct sle_t *sle, struct debug_t *debug);
 
 #endif
 

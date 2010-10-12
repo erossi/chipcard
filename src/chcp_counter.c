@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "chcp.h"
+#include "sle.h"
 #include "chcp_counter.h"
 
 /*!

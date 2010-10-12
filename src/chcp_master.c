@@ -21,83 +21,108 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
-#include "chcp.h"
+#include "sle.h"
 #include "chcp_pin.h"
 #include "debug.h"
 #include "led.h"
 #include "chcp_credit.h"
 #include "chcp_master.h"
 
-static uint8_t check_sle_atr(struct chcp_t *chcp) {
+static uint8_t check_sle_atr(struct sle_t *sle) {
 	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
 
-	if (memcmp(chcp->atr, &atr, 4))
+	if (memcmp(sle->atr, &atr, 4))
 		return(0);
 	else
 		return(1);
 }
 
-static void recharge(struct chcp_t *chcp, struct debug_t *debug)
+static void card_init(struct sle_t *sle, struct debug_t *debug)
 {
-	debug_print_P(PSTR("\n Writing cards with credit \n"), debug);
-	memcpy(chcp->main_memory + 32, "CHARLIE", 7);
-	*(chcp->main_memory + 40) = RECHARGE_BUCKS;
-	chcp_write_memory(chcp, 32, 9);
-	led_set(GREEN, ON);
-	debug_print_P(PSTR("done!\n"), debug);
-	debug_memory(chcp->main_memory, debug);
+	debug_print_P(PSTR("\n New card! Init the card? (y/N): "), debug);
+
+	/*! Infinite loop until y is pressed */
+	while (!debug_wait_for_y(debug));
+
+	/*! Do default auth */
+	sle_auth(sle, CHCP_DEF_PIN1, CHCP_DEF_PIN2, CHCP_DEF_PIN3);
+	debug_proc_counts(sle->ck_proc, debug);
+	debug_secmem(sle->security_memory, debug);
+	debug_print_P(PSTR("\n Write the secret PIN? (y/N): "), debug);
+
+	/*! Infinite loop until y is pressed */
+	while (!debug_wait_for_y(debug));
+
+	*(sle->security_memory + 1) = CHCP_PIN1;
+	*(sle->security_memory + 2) = CHCP_PIN2;
+	*(sle->security_memory + 3) = CHCP_PIN3;
+	sle_write_secmem(sle);
+	debug_proc_counts(sle->ck_proc, debug);
+	debug_secmem(sle->security_memory, debug);
+	debug_print_P(PSTR("\n New PINs has been written.\n"), debug);
 }
 
-void master(struct chcp_t *chcp, struct debug_t *debug)
+static void recharge(struct sle_t *sle, struct debug_t *debug)
+{
+	debug_print_P(PSTR("\n Recharging cards: "), debug);
+	memcpy(sle->main_memory + 32, CHCP_SLE_CODE, 7);
+	*(sle->main_memory + 40) = RECHARGE_BUCKS;
+	sle_write_memory(sle, 32, 9);
+	led_set(GREEN, ON);
+	debug_print_P(PSTR("done!\n"), debug);
+	debug_memory(sle->main_memory, debug);
+}
+
+void master(struct sle_t *sle, struct debug_t *debug)
 {
 	debug_print_P(PSTR("Master mode\n"), debug);
 
 	for (;;) {
 		/* FIX ME!! SLEEP if power is missing */
-		while (!chcp_present(chcp))
+		while (!sle_present(sle))
 			_delay_ms(1000);
 
-		chcp->auth = 0; /* Default to non-auth */
+		sle->auth = 0; /* Default to non-auth */
 		led_set(RED, ON);
 		_delay_ms(500);
-		chcp_reset(chcp->atr);
+		sle_reset(sle->atr);
 
 		/*! check the correct SLE4442 atr */
-		if (check_sle_atr(chcp)) {
+		if (check_sle_atr(sle)) {
 			/* I don't need to dump the entire memory */
-			chcp_dump_prt_memory(chcp->protected_memory);
-			chcp_dump_secmem(chcp->security_memory);
-			chcp_dump_memory(chcp->main_memory);
-			debug_atr(chcp->atr, debug);
-			debug_prt_memory(chcp->protected_memory, debug);
-			debug_secmem(chcp->security_memory, debug);
-			debug_memory(chcp->main_memory, debug);
+			sle_dump_prt_memory(sle->protected_memory);
+			sle_dump_secmem(sle->security_memory);
+			sle_dump_memory(sle->main_memory);
+			debug_atr(sle->atr, debug);
+			debug_prt_memory(sle->protected_memory, debug);
+			debug_secmem(sle->security_memory, debug);
+			debug_memory(sle->main_memory, debug);
 
-			if (credit_check(chcp)) {
-				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-				debug_print_P(PSTR("\n Insert a blank card please! \n"), debug);
-			} else {
-				debug_print_P(PSTR("\n New card! Auth? (y/N): "), debug);
+			/*! If the card is new */
+			if (credit_card_new(sle))
+				card_init(sle, debug);
+			else {
+				debug_print_P(PSTR("\n Initialized card! Auth? (press y): "), debug);
 				/*! Infinite loop until y is pressed */
 				while (!debug_wait_for_y(debug));
 
 				/* Do auth */
-				chcp_auth(chcp, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
-				debug_proc_counts(chcp->ck_proc, debug);
-				debug_secmem(chcp->security_memory, debug);
+				sle_auth(sle, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
+				debug_proc_counts(sle->ck_proc, debug);
+				debug_secmem(sle->security_memory, debug);
 			}
 		}
 
 		/*! authenticaded operations goes here */
-		if (chcp->auth) {
-			recharge(chcp, debug);
+		if (sle->auth) {
+			recharge(sle, debug);
 		}
 
-		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
+		debug_print_P(PSTR("Remove the card!\n"), debug);
 
 		/*! loop until the card is inserted */
-		while (chcp_present(chcp))
-			if (!chcp->auth)
+		while (sle_present(sle))
+			if (!sle->auth)
 				led_set(RED, BLINK);
 
 		led_set(NONE, OFF);
