@@ -20,7 +20,7 @@ REMOVE = rm -f
 
 uart_obj = uart.o debug.o
 objects = $(uart_obj) counter.o
-objects += master.o slave.o chcp_credit.o
+objects += master.o slave.o credit.o
 objects += led.o
 
 GITRELEASE = "\"$(shell git describe --tags)\""

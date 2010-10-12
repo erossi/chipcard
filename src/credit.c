@@ -20,7 +20,7 @@
 #include <string.h>
 #include "sle.h"
 #include "pin.h"
-#include "chcp_credit.h"
+#include "credit.h"
 
 uint8_t credit_card_new(struct sle_t *sle)
 {

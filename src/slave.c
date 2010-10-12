@@ -25,7 +25,7 @@
 #include "pin.h"
 #include "debug.h"
 #include "led.h"
-#include "chcp_credit.h"
+#include "credit.h"
 #include "counter.h"
 #include "slave.h"
 
