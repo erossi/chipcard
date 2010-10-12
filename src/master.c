@@ -26,8 +26,7 @@
 #include "debug.h"
 #include "led.h"
 #include "chcp_credit.h"
-#include "chcp_counter.h"
-#include "chcp_slave.h"
+#include "master.h"
 
 static uint8_t check_sle_atr(struct sle_t *sle) {
 	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
@@ -38,19 +37,53 @@ static uint8_t check_sle_atr(struct sle_t *sle) {
 		return(1);
 }
 
-void slave(struct sle_t *sle, struct debug_t *debug)
+static void card_init(struct sle_t *sle, struct debug_t *debug)
 {
-	debug_print_P(PSTR("Slave mode\n"), debug);
+	debug_print_P(PSTR("\n New card! Init the card? (y/N): "), debug);
+
+	/*! Infinite loop until y is pressed */
+	while (!debug_wait_for_y(debug));
+
+	/*! Do default auth */
+	sle_auth(sle, CHCP_DEF_PIN1, CHCP_DEF_PIN2, CHCP_DEF_PIN3);
+	debug_proc_counts(sle->ck_proc, debug);
+	debug_secmem(sle->security_memory, debug);
+	debug_print_P(PSTR("\n Write the secret PIN? (y/N): "), debug);
+
+	/*! Infinite loop until y is pressed */
+	while (!debug_wait_for_y(debug));
+
+	*(sle->security_memory + 1) = CHCP_PIN1;
+	*(sle->security_memory + 2) = CHCP_PIN2;
+	*(sle->security_memory + 3) = CHCP_PIN3;
+	sle_write_secmem(sle);
+	debug_proc_counts(sle->ck_proc, debug);
+	debug_secmem(sle->security_memory, debug);
+	debug_print_P(PSTR("\n New PINs has been written.\n"), debug);
+}
+
+static void recharge(struct sle_t *sle, struct debug_t *debug)
+{
+	debug_print_P(PSTR("\n Recharging cards: "), debug);
+	memcpy(sle->main_memory + 32, CHCP_SLE_CODE, 7);
+	*(sle->main_memory + 40) = RECHARGE_BUCKS;
+	sle_write_memory(sle, 32, 9);
+	led_set(GREEN, ON);
+	debug_print_P(PSTR("done!\n"), debug);
+	debug_memory(sle->main_memory, debug);
+}
+
+void master(struct sle_t *sle, struct debug_t *debug)
+{
+	debug_print_P(PSTR("Master mode\n"), debug);
 
 	for (;;) {
 		/* FIX ME!! SLEEP if power is missing */
 		while (!sle_present(sle))
 			_delay_ms(1000);
 
-		/*! Default to non-auth */
-		sle->auth = 0;
+		sle->auth = 0; /* Default to non-auth */
 		led_set(RED, ON);
-		/*! Wait between card insertion and begin */
 		_delay_ms(500);
 		sle_reset(sle->atr);
 
@@ -60,75 +93,37 @@ void slave(struct sle_t *sle, struct debug_t *debug)
 			sle_dump_prt_memory(sle->protected_memory);
 			sle_dump_secmem(sle->security_memory);
 			sle_dump_memory(sle->main_memory);
-
 			debug_atr(sle->atr, debug);
 			debug_prt_memory(sle->protected_memory, debug);
 			debug_secmem(sle->security_memory, debug);
 			debug_memory(sle->main_memory, debug);
 
-			/*! The card is valid and have credits */
-			if (credit_check(sle)) {
-				debug_print_P(PSTR("\n Valid card with credit\n"), debug);
-				debug_print_P(PSTR("\n Auth? (y/N): "), debug);
-				/*!
-				 Infinite loop until y is pressed.
-				 Have to check if debug is active or
-				 you'll lock the code.
-				 */
-				if (debug->active)
-					while (!debug_wait_for_y(debug));
+			/*! If the card is new */
+			if (credit_card_new(sle))
+				card_init(sle, debug);
+			else {
+				debug_print_P(PSTR("\n Initialized card! Auth? (press y): "), debug);
+				/*! Infinite loop until y is pressed */
+				while (!debug_wait_for_y(debug));
 
 				/* Do auth */
 				sle_auth(sle, CHCP_PIN1, CHCP_PIN2, CHCP_PIN3);
 				debug_proc_counts(sle->ck_proc, debug);
 				debug_secmem(sle->security_memory, debug);
-			} else
-				debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
+			}
 		}
 
 		/*! authenticaded operations goes here */
 		if (sle->auth) {
-			credit_bucks = credit_suck(sle);
-			debug_memory(sle->main_memory, debug);
-			led_set(GREEN, ON);
+			recharge(sle, debug);
 		}
 
-		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
+		debug_print_P(PSTR("Remove the card!\n"), debug);
 
-		if (!sle->auth)
-			while (sle_present(sle))
+		/*! loop until the card is inserted */
+		while (sle_present(sle))
+			if (!sle->auth)
 				led_set(RED, BLINK);
-		else {
-			/* test the counter */
-			sleep_enable();
-
-			while (credit_bucks) {
-				/* start the counter */
-				counter_start();
-				/* sleep */
-				sleep_cpu();
-				/*! awakening via IRQ */
-				/* stop the counter */
-				counter_stop();
-
-				debug_print_P(PSTR("Awake with bucks: "), debug);
-
-				/*! Protect from unallocated memory */
-				if (debug->active) {
-					debug->string = itoa(credit_bucks, debug->string, 10);
-					strcpy(debug->line, debug->string);
-					strcat(debug->line, "\n");
-					debug_print(debug);
-				}
-
-				/*! Don't go to sleep until
-				 uart chars has been sent */
-				if (debug->active)
-					_delay_ms(200);
-			}
-
-			sleep_disable();
-		}
 
 		led_set(NONE, OFF);
 	}

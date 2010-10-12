@@ -22,8 +22,8 @@
 #include "sle.h"
 #include "debug.h"
 #include "led.h"
-#include "chcp_master.h"
-#include "chcp_slave.h"
+#include "master.h"
+#include "slave.h"
 #include "chcp_counter.h"
 
 extern unsigned int credit_bucks;
