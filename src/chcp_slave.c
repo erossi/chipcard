@@ -22,7 +22,7 @@
 #include <avr/sleep.h>
 #include <util/delay.h>
 #include "sle.h"
-#include "chcp_pin.h"
+#include "pin.h"
 #include "debug.h"
 #include "led.h"
 #include "chcp_credit.h"

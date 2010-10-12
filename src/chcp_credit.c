@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "sle.h"
-#include "chcp_pin.h"
+#include "pin.h"
 #include "chcp_credit.h"
 
 uint8_t credit_card_new(struct sle_t *sle)
