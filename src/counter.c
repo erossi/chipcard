@@ -27,7 +27,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "sle.h"
-#include "chcp_counter.h"
+#include "counter.h"
 
 /*!
   IRQ wakes up on the timer oveflow and decrement the

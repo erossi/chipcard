@@ -26,7 +26,7 @@
 #include "debug.h"
 #include "led.h"
 #include "chcp_credit.h"
-#include "chcp_counter.h"
+#include "counter.h"
 #include "slave.h"
 
 static uint8_t check_sle_atr(struct sle_t *sle) {

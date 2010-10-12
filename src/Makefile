@@ -19,7 +19,7 @@ DUDE = avrdude -c $(DUDEDEV) -p $(MCU) -P $(DUDEPORT) -e -U flash:w:$(PRGNAME).h
 REMOVE = rm -f
 
 uart_obj = uart.o debug.o
-objects = $(uart_obj) chcp_counter.o
+objects = $(uart_obj) counter.o
 objects += master.o slave.o chcp_credit.o
 objects += led.o
 
