@@ -15,6 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! \file master.c
+  \brief Device works in writing/recharge mode.
+  */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,18 +28,10 @@
 #include "sle.h"
 #include "pin.h"
 #include "debug.h"
+#include "tools.h"
 #include "led.h"
 #include "credit.h"
 #include "master.h"
-
-static uint8_t check_sle_atr(struct sle_t *sle) {
-	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
-
-	if (memcmp(sle->atr, &atr, 4))
-		return(0);
-	else
-		return(1);
-}
 
 static void card_init(struct sle_t *sle, struct debug_t *debug)
 {
@@ -90,9 +86,7 @@ void master(struct sle_t *sle, struct debug_t *debug)
 		/*! check the correct SLE4442 atr */
 		if (check_sle_atr(sle)) {
 			/* I don't need to dump the entire memory */
-			sle_dump_prt_memory(sle->protected_memory);
-			sle_dump_secmem(sle->security_memory);
-			sle_dump_memory(sle->main_memory);
+			sle_dump_allmem(sle);
 			debug_atr(sle->atr, debug);
 			debug_prt_memory(sle->protected_memory, debug);
 			debug_secmem(sle->security_memory, debug);
@@ -103,7 +97,8 @@ void master(struct sle_t *sle, struct debug_t *debug)
 				card_init(sle, debug);
 			else {
 				debug_print_P(PSTR("\n Initialized card! Auth? (press y): "), debug);
-				/*! Infinite loop until y is pressed */
+				/*! Infinite loop until y is pressed 
+				    only if debug is active */
 				while (!debug_wait_for_y(debug));
 
 				/* Do auth */
@@ -113,17 +108,20 @@ void master(struct sle_t *sle, struct debug_t *debug)
 			}
 		}
 
-		/*! authenticaded operations goes here */
+		/*! auth op goes here */
 		if (sle->auth) {
 			recharge(sle, debug);
 		}
 
 		debug_print_P(PSTR("Remove the card!\n"), debug);
 
-		/*! loop until the card is inserted */
-		while (sle_present(sle))
+		/*! loop until the card remain inserted */
+		while (sle_present(sle)) {
 			if (!sle->auth)
 				led_set(RED, BLINK);
+
+			_delay_ms(500);
+		}
 
 		led_set(NONE, OFF);
 	}

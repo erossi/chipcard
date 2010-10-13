@@ -1,0 +1,7 @@
+/doc/html
+/doc/latex
+/.todo
+*.swp
+*.o
+*.a
+

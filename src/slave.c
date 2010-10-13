@@ -24,18 +24,43 @@
 #include "sle.h"
 #include "pin.h"
 #include "debug.h"
+#include "tools.h"
 #include "led.h"
 #include "credit.h"
 #include "counter.h"
 #include "slave.h"
 
-static uint8_t check_sle_atr(struct sle_t *sle) {
-	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
+static void auth_stuff(struct sle_t *sle, struct debug_t *debug)
+{
+	/* test the counter */
+	sleep_enable();
 
-	if (memcmp(sle->atr, &atr, 4))
-		return(0);
-	else
-		return(1);
+	while (credit_bucks) {
+		/* start the counter */
+		counter_start();
+		/* sleep */
+		sleep_cpu();
+		/*! awakening via IRQ */
+		/* stop the counter */
+		counter_stop();
+
+		debug_print_P(PSTR("Awake with bucks: "), debug);
+
+		/*! Protect from unallocated memory */
+		if (debug->active) {
+			debug->string = itoa(credit_bucks, debug->string, 10);
+			strcpy(debug->line, debug->string);
+			strcat(debug->line, "\n");
+			debug_print(debug);
+		}
+
+		/*! Don't go to sleep until
+		  uart chars has been sent */
+		if (debug->active)
+			_delay_ms(200);
+	}
+
+	sleep_disable();
 }
 
 void slave(struct sle_t *sle, struct debug_t *debug)
@@ -57,9 +82,7 @@ void slave(struct sle_t *sle, struct debug_t *debug)
 		/*! check the correct SLE4442 atr */
 		if (check_sle_atr(sle)) {
 			/* I don't need to dump the entire memory */
-			sle_dump_prt_memory(sle->protected_memory);
-			sle_dump_secmem(sle->security_memory);
-			sle_dump_memory(sle->main_memory);
+			sle_dump_allmem(sle);
 
 			debug_atr(sle->atr, debug);
 			debug_prt_memory(sle->protected_memory, debug);
@@ -86,7 +109,7 @@ void slave(struct sle_t *sle, struct debug_t *debug)
 				debug_print_P(PSTR("\n Error! - Non initialized card!\n"), debug);
 		}
 
-		/*! authenticaded operations goes here */
+		/*! auth op: 1st get credit */
 		if (sle->auth) {
 			credit_bucks = credit_suck(sle);
 			debug_memory(sle->main_memory, debug);
@@ -95,40 +118,12 @@ void slave(struct sle_t *sle, struct debug_t *debug)
 
 		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
 
-		if (!sle->auth)
+		/*! auth op: 2nd do the counting */
+		if (sle->auth)
+			auth_stuff(sle, debug);
+		else
 			while (sle_present(sle))
 				led_set(RED, BLINK);
-		else {
-			/* test the counter */
-			sleep_enable();
-
-			while (credit_bucks) {
-				/* start the counter */
-				counter_start();
-				/* sleep */
-				sleep_cpu();
-				/*! awakening via IRQ */
-				/* stop the counter */
-				counter_stop();
-
-				debug_print_P(PSTR("Awake with bucks: "), debug);
-
-				/*! Protect from unallocated memory */
-				if (debug->active) {
-					debug->string = itoa(credit_bucks, debug->string, 10);
-					strcpy(debug->line, debug->string);
-					strcat(debug->line, "\n");
-					debug_print(debug);
-				}
-
-				/*! Don't go to sleep until
-				 uart chars has been sent */
-				if (debug->active)
-					_delay_ms(200);
-			}
-
-			sleep_disable();
-		}
 
 		led_set(NONE, OFF);
 	}

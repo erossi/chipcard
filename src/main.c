@@ -15,6 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! \file main.c
+  \brief Main.
+ */
+
 #include <stdlib.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -41,6 +45,7 @@ int main(void)
 
 	sei();
 
+#ifdef MASTERSLAVE
 	if (debug->active)
 		debug_print_P(PSTR("\nMaster mode? (y/N): "), debug);
 
@@ -49,6 +54,15 @@ int main(void)
 		master(sle, debug);
 	else
 		slave(sle, debug);
+#endif
+
+#ifdef MASTERONLY
+	master(sle, debug);
+#endif
+
+#ifdef SLAVEONLY
+	slave(sle, debug);
+#endif
 
 	cli();
 	debug_free(debug);

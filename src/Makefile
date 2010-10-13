@@ -19,9 +19,9 @@ DUDE = avrdude -c $(DUDEDEV) -p $(MCU) -P $(DUDEPORT) -e -U flash:w:$(PRGNAME).h
 REMOVE = rm -f
 
 uart_obj = uart.o debug.o
-objects = $(uart_obj) counter.o
-objects += master.o slave.o credit.o
-objects += led.o
+objects = $(uart_obj) counter.o tools.o led.o
+slave_obj = slave.o credit.o
+master_obj = master.o
 
 GITRELEASE = "\"$(shell git describe --tags)\""
 
@@ -29,8 +29,16 @@ GITRELEASE = "\"$(shell git describe --tags)\""
 .SILENT: help
 .SUFFIXES: .c, .o
 
-all: $(objects)
-	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c $(objects) $(LFLAGS)
+all: $(objects) $(master_obj) $(slave_obj)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf main.c -D MASTERSLAVE $(objects) $(master_obj) $(slave_obj) $(LFLAGS)
+	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
+
+master: $(objects) $(master_obj)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c -D MASTERONLY $(objects) $(master_obj) $(LFLAGS)
+	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
+
+slave: $(objects) $(slave_obj)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c -D SLAVEONLY $(objects) $(slave_obj) $(LFLAGS)
 	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
 
 debug.o:
@@ -40,5 +48,5 @@ program:
 	$(DUDE)
 
 clean:
-	$(REMOVE) $(PRGNAME).elf $(PRGNAME).hex $(objects)
+	$(REMOVE) $(PRGNAME).elf $(PRGNAME).hex $(objects) $(master_obj) $(slave_obj)
 
