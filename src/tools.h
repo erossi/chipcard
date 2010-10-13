@@ -18,6 +18,8 @@
 #ifndef CHPC_TOOLS_H
 #define CHPC_TOOLS_H
 
+#include "sle.h"
+
 uint8_t check_sle_atr(struct sle_t *sle);
 
 #endif

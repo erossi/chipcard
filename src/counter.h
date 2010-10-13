@@ -24,6 +24,8 @@
 #ifndef CHCP_COUNTER_H
 #define CHCP_COUNTER_H
 
+#include "sle.h"
+
 /*!
   Global used in interrupt.
   This rapprensent the numner of cycle the counter has

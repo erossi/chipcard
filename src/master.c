@@ -25,14 +25,13 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
-#include "sle.h"
-#include "pin.h"
-#include "debug.h"
-#include "tools.h"
-#include "led.h"
-#include "credit.h"
 #include "master.h"
 
+/*! Initialize a new card auth with default pin, usually set to 0xff,
+  with my secret pins and with my 7 chars code.
+  The "code" will permit me to non-authenticate a non-pre-initialized
+  card failing the auth.  
+  */
 static void card_init(struct sle_t *sle, struct debug_t *debug)
 {
 	debug_print_P(PSTR("\n New card! Init the card? (y/N): "), debug);
@@ -58,6 +57,8 @@ static void card_init(struct sle_t *sle, struct debug_t *debug)
 	debug_print_P(PSTR("\n New PINs has been written.\n"), debug);
 }
 
+/*! Write an auth card with a precompiled recharge value to a
+  precompiled memory position */
 static void recharge(struct sle_t *sle, struct debug_t *debug)
 {
 	debug_print_P(PSTR("\n Recharging cards: "), debug);
@@ -74,7 +75,7 @@ void master(struct sle_t *sle, struct debug_t *debug)
 	debug_print_P(PSTR("Master mode\n"), debug);
 
 	for (;;) {
-		/* FIX ME!! SLEEP if power is missing */
+		/*! \bug should SLEEP if power is missing */
 		while (!sle_present(sle))
 			_delay_ms(1000);
 

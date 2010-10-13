@@ -21,7 +21,6 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include "uart.h"
 #include "debug.h"
 
 void debug_print_P(PGM_P string, struct debug_t *debug)

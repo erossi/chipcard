@@ -20,7 +20,6 @@
 #include <string.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include "sle.h"
 #include "tools.h"
 
 uint8_t check_sle_atr(struct sle_t *sle)

@@ -15,8 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! \file master.h
+  \brief description */
+
 #ifndef CHCP_MASTER_H
 #define CHCP_MASTER_H
+
+#include "sle.h"
+#include "pin.h"
+#include "debug.h"
+#include "tools.h"
+#include "led.h"
+#include "credit.h"
 
 /*!
   The number of hours to recharge. techically it has to be

@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "sle.h"
 #include "counter.h"
 
 /*!

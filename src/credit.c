@@ -18,8 +18,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sle.h"
-#include "pin.h"
 #include "credit.h"
 
 uint8_t credit_card_new(struct sle_t *sle)

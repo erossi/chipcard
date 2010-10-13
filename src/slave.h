@@ -15,8 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! \file slave.h
+  more info needed */
+
 #ifndef CHCP_SLAVE_H
 #define CHCP_SLAVE_H
+
+#include "sle.h"
+#include "pin.h"
+#include "debug.h"
+#include "tools.h"
+#include "led.h"
+#include "credit.h"
+#include "counter.h"
 
 void slave(struct sle_t *sle, struct debug_t *debug);
 

@@ -21,13 +21,6 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
-#include "sle.h"
-#include "pin.h"
-#include "debug.h"
-#include "tools.h"
-#include "led.h"
-#include "credit.h"
-#include "counter.h"
 #include "slave.h"
 
 static void auth_stuff(struct sle_t *sle, struct debug_t *debug)

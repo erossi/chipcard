@@ -22,6 +22,8 @@
 #ifndef CHCP_DEBUG_H
 #define CHCP_DEBUG_H
 
+#include "uart.h"
+
 #define QUOTEME_(x) #x
 #define QUOTEME(x) QUOTEME_(x)
 

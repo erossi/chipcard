@@ -18,6 +18,9 @@
 #ifndef CHCP_CREDIT_H
 #define CHCP_CREDIT_H
 
+#include "sle.h"
+#include "pin.h"
+
 /*!
 This is the multiplier of the credit stored in the card.
 for example 2 bucks in the card become 900 in the memory.
