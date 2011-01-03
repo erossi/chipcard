@@ -1,5 +1,5 @@
 /* This file is part of chpc
- * Copyright (C) 2010 Enrico Rossi
+ * Copyright (C) 2010, 2011 Enrico Rossi
  *
  * Chpc is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,22 +40,22 @@ ISR(TIMER2_OVF_vect)
 void counter_setup(void)
 {
 	ASSR = _BV(AS2);
-	TCCR2 = 0;
+	TCCR2A = 0;
 
 	/*! enable interrupt on timer 2 overflow */
-	TIMSK = _BV(TOIE2);
+	TIMSK2 = _BV(TOIE2);
 }
 
 void counter_start(void)
 {
 	/*! counter prescaler 1024 */
-	TCCR2 = _BV(CS22) | _BV(CS21) | _BV(CS20);
-	loop_until_bit_is_clear(ASSR, TCR2UB);
+	TCCR2A = _BV(CS22) | _BV(CS21) | _BV(CS20);
+	loop_until_bit_is_clear(ASSR, TCR2AUB);
 }
 
 void counter_stop(void)
 {
-	TCCR2 = 0;
-	loop_until_bit_is_clear(ASSR, TCR2UB);
+	TCCR2A = 0;
+	loop_until_bit_is_clear(ASSR, TCR2AUB);
 }
 
