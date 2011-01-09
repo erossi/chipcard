@@ -7,7 +7,7 @@
 void uart_init(void)
 {
 /* improve baud rate error by using 2x clk */
-#if F_CPU < 2000000UL && defined(U2X)
+#if F_CPU < 2000000UL && defined(U2X0)
   UCSR0A = _BV(U2X0);
   UBRR0L = (F_CPU / (8UL * UART_BAUD)) - 1;
 #else

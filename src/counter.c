@@ -41,6 +41,7 @@ void counter_setup(void)
 {
 	ASSR = _BV(AS2);
 	TCCR2A = 0;
+	TCCR2B = 0;
 
 	/*! enable interrupt on timer 2 overflow */
 	TIMSK2 = _BV(TOIE2);
@@ -49,13 +50,13 @@ void counter_setup(void)
 void counter_start(void)
 {
 	/*! counter prescaler 1024 */
-	TCCR2A = _BV(CS22) | _BV(CS21) | _BV(CS20);
-	loop_until_bit_is_clear(ASSR, TCR2AUB);
+	TCCR2B = _BV(CS22) | _BV(CS21) | _BV(CS20);
+	loop_until_bit_is_clear(ASSR, TCR2BUB);
 }
 
 void counter_stop(void)
 {
-	TCCR2A = 0;
-	loop_until_bit_is_clear(ASSR, TCR2AUB);
+	TCCR2B = 0;
+	loop_until_bit_is_clear(ASSR, TCR2BUB);
 }
 
