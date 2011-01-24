@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <util/delay.h>
@@ -25,6 +26,8 @@
 
 static void auth_stuff(struct sle_t *sle, struct debug_t *debug)
 {
+	/* set_sleep_mode(SLEEP_MODE_EXT_STANDBY); */
+	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	sle_disable_port();
 	sleep_enable();
 	/* sleep_bod_disable(); */
@@ -46,8 +49,12 @@ static void auth_stuff(struct sle_t *sle, struct debug_t *debug)
 	} else {
 		counter_start();
 
-		while (credit_bucks)
+		while (credit_bucks) {
+			cli();
+			sleep_bod_disable();
+			sei();
 			sleep_cpu();
+		}
 
 		counter_stop();
 	}

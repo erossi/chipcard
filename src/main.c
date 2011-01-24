@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
-#include <avr/sleep.h>
 #include "sle.h"
 #include "debug.h"
 #include "led.h"
@@ -35,12 +34,12 @@ int main(void)
 	struct sle_t *sle;
 	struct debug_t *debug;
 
+	/* Init sequence, turn on both led */
+	led_init();
 	sle = sle_init();
 	debug = debug_init();
-	led_init();
 	counter_setup();
-	/* set_sleep_mode(SLEEP_MODE_EXT_STANDBY); */
-	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+	led_set(BOTH, OFF);
 
 	sei();
 

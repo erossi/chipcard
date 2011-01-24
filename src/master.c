@@ -1,5 +1,5 @@
 /* This file is part of chpc
- * Copyright (C) 2010 Enrico Rossi
+ * Copyright (C) 2010, 2011 Enrico Rossi
  *
  * Chpc is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/pgmspace.h>
-#include <avr/sleep.h>
 #include <util/delay.h>
 #include "master.h"
 
