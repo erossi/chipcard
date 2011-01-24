@@ -27,10 +27,10 @@ void led_set(const uint8_t led, const uint8_t status)
 			led_set(NONE, OFF);
 
 			if ((led == RED) || (led == BOTH))
-				 LED_PORT |= _BV(LED_RED);
+				 LED_PORT &= ~_BV(LED_RED);
 
 			if ((led == GREEN) || (led == BOTH))
-				LED_PORT |= _BV(LED_GREEN);
+				LED_PORT &= ~_BV(LED_GREEN);
 
 			break;
 		case BLINK:
@@ -51,7 +51,7 @@ void led_set(const uint8_t led, const uint8_t status)
 			led_set(NONE, OFF);
 			break;
 		default:
-			LED_PORT &= ~(_BV(LED_RED) | _BV(LED_GREEN));
+			LED_PORT |= (_BV(LED_RED) | _BV(LED_GREEN));
 	}
 }
 
