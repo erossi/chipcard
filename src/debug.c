@@ -1,5 +1,5 @@
 /* This file is part of chpc
- * Copyright (C) 2010 Enrico Rossi
+ * Copyright (C) 2010, 2011 Enrico Rossi
  *
  * Chpc is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -162,6 +162,7 @@ struct debug_t *debug_init(void)
 	debug_print_P(PSTR("\nActivate debug? (y/N): "), debug);
 
 	if (!debug_wait_for_y(debug)) {
+		uart_shutdown();
 		debug->active = 0;
 		free(debug->line);
 		free(debug->string);

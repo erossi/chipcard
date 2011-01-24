@@ -20,6 +20,14 @@ void uart_init(void)
   UCSR0C = _BV(USBS0) | _BV(UCSZ00) | _BV(UCSZ01);
 }
 
+void uart_shutdown(void)
+{
+	UCSR0C = 0;
+	UCSR0B = 0;
+	UBRR0L = 0;
+	UCSR0A = 0;
+}
+
 char uart_getchar(void)
 {
 	if (bit_is_set(UCSR0A, RXC0))

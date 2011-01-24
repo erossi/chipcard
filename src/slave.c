@@ -1,5 +1,5 @@
 /* This file is part of chpc
- * Copyright (C) 2010 Enrico Rossi
+ * Copyright (C) 2010, 2011 Enrico Rossi
  *
  * Chpc is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,35 +25,35 @@
 
 static void auth_stuff(struct sle_t *sle, struct debug_t *debug)
 {
-	/* test the counter */
+	sle_disable_port();
 	sleep_enable();
+	/* sleep_bod_disable(); */
+	/* IRQ must be enabled to decrement credit_bucks */
 
-	while (credit_bucks) {
-		/* start the counter */
-		counter_start();
-		/* sleep */
-		sleep_cpu();
-		/*! awakening via IRQ */
-		/* stop the counter */
-		counter_stop();
-
-		debug_print_P(PSTR("Awake with bucks: "), debug);
-
-		/*! Protect from unallocated memory */
-		if (debug->active) {
+	if (debug->active) {
+		while (credit_bucks) {
+			counter_start();
+			sleep_cpu();
+			counter_stop();
+			debug_print_P(PSTR("Awake with bucks: "), debug);
 			debug->string = itoa(credit_bucks, debug->string, 10);
 			strcpy(debug->line, debug->string);
 			strcat(debug->line, "\n");
 			debug_print(debug);
-		}
-
-		/*! Don't go to sleep until
-		  uart chars has been sent */
-		if (debug->active)
+			/*! Don't go to sleep until uart chars has been sent */
 			_delay_ms(200);
+		}
+	} else {
+		counter_start();
+
+		while (credit_bucks)
+			sleep_cpu();
+
+		counter_stop();
 	}
 
 	sleep_disable();
+	sle_enable_port();
 }
 
 void slave(struct sle_t *sle, struct debug_t *debug)
