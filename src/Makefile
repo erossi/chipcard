@@ -18,7 +18,6 @@ PWD = $(shell pwd)
 INC = -I/usr/avr/include/ -I$(PWD)/../include
 OPTLEV = 2
 FCPU = 1000000UL
-#FCPU = 4000000UL
 CFLAGS = $(INC) -Wall -Wstrict-prototypes -pedantic -mmcu=$(MCU) -O$(OPTLEV) -D F_CPU=$(FCPU)
 LFLAGS = -L$(PWD)/../lib -lsle4442
 
@@ -27,11 +26,16 @@ CC = avr-gcc
 
 DUDEPORT = /dev/ttyUSB0
 DUDEDEV = stk500v2
+DUDEPORT = usb
+DUDEDEV = avrispmkII
+
 PRGNAME = chipcard
 OBJCOPY = avr-objcopy -j .text -j .data -O ihex
 OBJDUMP = avr-objdump
 SIZE = avr-size
-DUDE = avrdude -c $(DUDEDEV) -p $(MCU) -P $(DUDEPORT) -e -U flash:w:$(PRGNAME).hex
+
+# Use sudo for USB avrispmkII
+DUDE = sudo avrdude -c $(DUDEDEV) -p $(MCU) -P $(DUDEPORT) -e -U flash:w:$(PRGNAME).hex
 REMOVE = rm -f
 
 uart_obj = uart.o debug.o
@@ -50,11 +54,11 @@ all: $(objects) $(master_obj) $(slave_obj)
 	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
 
 master: $(objects) $(master_obj)
-	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c -D MASTERONLY $(objects) $(master_obj) $(LFLAGS)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf main.c -D MASTERONLY $(objects) $(master_obj) $(LFLAGS)
 	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
 
 slave: $(objects) $(slave_obj)
-	$(CC) $(CFLAGS) -o $(PRGNAME).elf $(PRGNAME).c -D SLAVEONLY $(objects) $(slave_obj) $(LFLAGS)
+	$(CC) $(CFLAGS) -o $(PRGNAME).elf main.c -D SLAVEONLY $(objects) $(slave_obj) $(LFLAGS)
 	$(OBJCOPY) $(PRGNAME).elf $(PRGNAME).hex
 
 debug.o:
@@ -66,3 +70,5 @@ program:
 clean:
 	$(REMOVE) $(PRGNAME).elf $(PRGNAME).hex $(objects) $(master_obj) $(slave_obj)
 
+version:
+	git describe --tags
