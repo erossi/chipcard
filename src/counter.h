@@ -36,7 +36,7 @@
   thus the maximum number of hour loadable in the card can be (rounded):
   65535/450 is 145h about 6 days.
  */
-unsigned int credit_bucks;
+volatile unsigned int credit_bucks;
 
 void counter_setup(void);
 void counter_start(void);

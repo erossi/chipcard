@@ -1,5 +1,5 @@
 /* This file is part of chpc
- * Copyright (C) 2010 Enrico Rossi
+ * Copyright (C) 2010, 2011 Enrico Rossi
  *
  * Chpc is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@
 #include "slave.h"
 #include "counter.h"
 
-extern unsigned int credit_bucks;
-
 int main(void)
 {
 	struct sle_t *sle;
@@ -41,13 +39,13 @@ int main(void)
 	debug = debug_init();
 	led_init();
 	counter_setup();
-	set_sleep_mode(SLEEP_MODE_EXT_STANDBY);
+	/* set_sleep_mode(SLEEP_MODE_EXT_STANDBY); */
+	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 
 	sei();
 
 #ifdef MASTERSLAVE
-	if (debug->active)
-		debug_print_P(PSTR("\nMaster mode? (y/N): "), debug);
+	debug_print_P(PSTR("\nMaster mode? (y/N): "), debug);
 
 	/*! by default go into slave mode */
 	if (debug->active && debug_wait_for_y(debug))
