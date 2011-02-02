@@ -1,5 +1,5 @@
 /* This file is part of chpc
- * Copyright (C) 2010 Enrico Rossi
+ * Copyright (C) 2010, 2011 Enrico Rossi
  *
  * Chpc is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,13 @@
  */
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <avr/pgmspace.h>
-#include <util/delay.h>
+#include <avr/io.h>
 #include "tools.h"
 
 uint8_t check_sle_atr(struct sle_t *sle)
 {
+	/*! \bug should use eeprom area instead RAM */
 	uint8_t atr[4] = {0xa2, 0x13, 0x10, 0x91};
 
 	if (memcmp(sle->atr, &atr, 4))
@@ -32,3 +31,19 @@ uint8_t check_sle_atr(struct sle_t *sle)
 		return(1);
 }
 
+void chcp_gpio_set(const uint8_t io)
+{
+	if (io) {
+		CHCP_GPIO_PORT &= ~_BV(CHCP_GPIO_0);
+		CHCP_GPIO_PORT |= _BV(CHCP_GPIO_1);
+	} else {
+		CHCP_GPIO_PORT &= ~_BV(CHCP_GPIO_1);
+		CHCP_GPIO_PORT |= _BV(CHCP_GPIO_0);
+	}
+}
+
+void chcp_gpio_init(void)
+{
+	CHCP_GPIO_DDR |= _BV(CHCP_GPIO_0) | _BV(CHCP_GPIO_1);
+	chcp_gpio_set(OFF);
+}

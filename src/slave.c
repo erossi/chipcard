@@ -66,9 +66,10 @@ static void auth_stuff(struct sle_t *sle, struct debug_t *debug)
 void slave(struct sle_t *sle, struct debug_t *debug)
 {
 	debug_print_P(PSTR("Slave mode\n"), debug);
+	chcp_gpio_init();
 
 	for (;;) {
-		/* FIX ME!! SLEEP if power is missing */
+		/*! \bug SLEEP if power is missing */
 		while (!sle_present(sle))
 			_delay_ms(1000);
 
@@ -114,6 +115,7 @@ void slave(struct sle_t *sle, struct debug_t *debug)
 			credit_bucks = credit_suck(sle);
 			debug_memory(sle->main_memory, debug);
 			led_set(GREEN, ON);
+			chcp_gpio_set(ON);
 		}
 
 		debug_print_P(PSTR("Now you can remove the card!\n"), debug);
@@ -126,6 +128,6 @@ void slave(struct sle_t *sle, struct debug_t *debug)
 				led_set(RED, BLINK);
 
 		led_set(NONE, OFF);
+		chcp_gpio_set(OFF);
 	}
 }
-
